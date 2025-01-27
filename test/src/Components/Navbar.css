@@ -1,0 +1,50 @@
+/* Navbar container */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo styling */
+.logo img {
+    height: 78px; /* Set the height of the logo */
+}
+
+/* Buttons container */
+.auth-buttons {
+    display: flex;
+    gap: 16px; /* Space between buttons */
+}
+
+/* Login button */
+.login-btn {
+    background-color: transparent;
+    border: 1px solid #6b7280; /* Gray border */
+    color: #6b7280; /* Gray text */
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: #f3f4f6; /* Light gray on hover */
+}
+
+/* Sign Up button */
+.signup-btn {
+    background-color: #3b82f6; /* Blue background */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.signup-btn:hover {
+    background-color: #2563eb; /* Darker blue on hover */
+}

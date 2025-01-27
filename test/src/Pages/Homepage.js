@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Searchbar from '../Components/Searchbar';
 import ArticleFeed from '../Components/ArticleFeed';
+import Navbar from '../Components/Navbar';
 import './Homepage.css';
 
 const Homepage = () => {
@@ -15,7 +16,7 @@ const Homepage = () => {
   return (
     <>
     <div className="Homepage">
-    <h1>News Feed</h1>
+    <Navbar />
     <Searchbar onSearch={handleSearch} />
     <ArticleFeed query={searchQuery} filter={filterBy} />
     </div>
