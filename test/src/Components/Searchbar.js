@@ -25,12 +25,17 @@ const Searchbar = ({ onSearch }) => {
         value={searchKeyword}
         onChange={(e) => setSearchKeyword(e.target.value)}
         onKeyDown={handleKeyDown}
+        className="search-input"
       />
-      <select value={filterBy} onChange={(e) => setFilterBy(e.target.value)}>
+      <select 
+        value={filterBy} 
+        onChange={(e) => setFilterBy(e.target.value)}
+        className="filter-select"
+      >
         <option value="">No Filter</option>
         <option value="source">Source</option>
       </select>
-      <button onClick={handleSearch}>Search</button>
+      <button onClick={handleSearch} className="search-button">Search</button>
     </div>
   );
 };
