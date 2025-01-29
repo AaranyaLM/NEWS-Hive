@@ -1,4 +1,4 @@
-/* Navbar container */
+
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -8,22 +8,22 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Logo styling */
+
 .logo img {
-    height: 68px; /* Set the height of the logo */
+    height: 68px;
 }
 
-/* Buttons container */
+
 .auth-buttons {
     display: flex;
-    gap: 16px; /* Space between buttons */
+    gap: 16px;
 }
 
-/* Login button */
+
 .login-btn {
     background-color: transparent;
-    border: 1px solid #6b7280; /* Gray border */
-    color: #6b7280; /* Gray text */
+    border: 1px solid #6b7280;
+    color: #6b7280;
     padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
@@ -31,12 +31,12 @@
 }
 
 .login-btn:hover {
-    background-color: #f3f4f6; /* Light gray on hover */
+    background-color: #f3f4f6;
 }
 
-/* Sign Up button */
+
 .signup-btn {
-    background-color: #000000; /* Blue background */
+    background-color: #000000;
     color: white;
     border: none;
     padding: 8px 16px;
@@ -46,5 +46,19 @@
 }
 
 .signup-btn:hover {
-    background-color: #2563eb; /* Darker blue on hover */
+    background-color: #6b7280;
+}
+
+
+.navigation {
+    display: flex;
+    gap: 16px;
+}
+.navigation a{
+    text-decoration: none;
+    color: #000000;
+    transition: all 0.2s;
+}
+.navigation a:hover{
+    color: #6b7280;
 }

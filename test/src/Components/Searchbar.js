@@ -21,7 +21,7 @@ const Searchbar = ({ onSearch }) => {
     <div className="search-bar">
       <input
         type="text"
-        placeholder="Search news..."
+        placeholder="Search..."
         value={searchKeyword}
         onChange={(e) => setSearchKeyword(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -32,7 +32,7 @@ const Searchbar = ({ onSearch }) => {
         onChange={(e) => setFilterBy(e.target.value)}
         className="filter-select"
       >
-        <option value="">No Filter</option>
+        <option value="">Keyword</option>
         <option value="source">Source</option>
       </select>
       <button onClick={handleSearch} className="search-button">Search</button>

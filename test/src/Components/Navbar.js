@@ -8,9 +8,9 @@ function Navbar(props) {
             <div className="logo">
                 <img src={Logo} alt="Logo" />
             </div>
-            <div className="auth-buttons">
+            <div className="navigation">
                 <a href=''>Home</a>
-                <a href=''>Home</a>
+                <a href=''>Trending</a>
                 <a href=''>Home</a>
             </div>
             <div className="auth-buttons">
