@@ -38,6 +38,21 @@ app.get('/api/news', (req, res) => {
     });
 });
 
+//For Trending
+app.get('/api/trending', (req, res) => {
+  newsapi.v2
+    .topHeadlines({
+      country: 'us', // Change based on your preference
+    })
+    .then(response => {
+      res.json(response.articles);
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).send('Error fetching trending news');
+    });
+});
+
 
 app.listen(5000, () => {
   console.log('Server started on http://localhost:5000');
