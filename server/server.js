@@ -40,18 +40,24 @@ app.get('/api/news', (req, res) => {
 
 //For Trending
 app.get('/api/trending', (req, res) => {
+  const { q, country, category, sortBy } = req.query;
+
+  const options = {};
+
+  if (country) options.country = country;  // Only set if provided
+  if (category) options.category = category;
+  if (q) options.q = q;
+  if (sortBy) options.sortBy = sortBy || 'publishedAt';
+
   newsapi.v2
-    .topHeadlines({
-      country: 'us', // Change based on your preference
-    })
-    .then(response => {
-      res.json(response.articles);
-    })
+    .topHeadlines(options)
+    .then(response => res.json(response.articles))
     .catch(err => {
       console.error(err);
       res.status(500).send('Error fetching trending news');
     });
 });
+
 
 
 app.listen(5000, () => {
