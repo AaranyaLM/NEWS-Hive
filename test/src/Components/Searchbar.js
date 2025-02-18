@@ -10,7 +10,7 @@ const Searchbar = ({ onSearch }) => {
   const debouncedSearch = useCallback(
     debounce((search, filter) => {
       onSearch(search, filter);
-    }, 300),
+    }, 200),
     []
   );
 
