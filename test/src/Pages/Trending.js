@@ -8,7 +8,7 @@ const Trending = () => {
   const [search, setSearch] = useState('');
   const [locale, setLocale] = useState('us'); // Default to US
   const [category, setCategory] = useState('');
-  const [sortBy, setSortBy] = useState('publishedAt'); // Default sorting
+  const [sortBy, setSortBy] = useState('relevancy'); // Default sorting
 
   return (
     <div className="Homepage">

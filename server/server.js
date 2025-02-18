@@ -47,7 +47,7 @@ app.get('/api/trending', (req, res) => {
   if (country) options.country = country;  // Only set if provided
   if (category) options.category = category;
   if (q) options.q = q;
-  if (sortBy) options.sortBy = sortBy || 'publishedAt';
+  if (sortBy) options.sortBy = sortBy || 'relevancy';
 
   newsapi.v2
     .topHeadlines(options)
@@ -63,3 +63,6 @@ app.get('/api/trending', (req, res) => {
 app.listen(5000, () => {
   console.log('Server started on http://localhost:5000');
 });
+
+
+

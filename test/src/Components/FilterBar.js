@@ -26,8 +26,8 @@ const FilterBar = ({ search, setSearch, locale, setLocale, category, setCategory
         <option value="entertainment">Entertainment</option>
       </select>
       <select className="filter-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-        <option value="publishedAt">Latest</option>
         <option value="relevancy">Relevance</option>
+        <option value="publishedAt">Latest</option>
         <option value="popularity">Popularity</option>
       </select>
       <button className="search-button">Search</button>
