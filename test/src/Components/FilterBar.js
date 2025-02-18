@@ -30,7 +30,7 @@ const FilterBar = ({ search, setSearch, locale, setLocale, category, setCategory
         <option value="publishedAt">Latest</option>
         <option value="popularity">Popularity</option>
       </select>
-      <button className="search-button">Search</button>
+      {/* <button className="search-button">Search</button> */}
     </div>
   );
 };
