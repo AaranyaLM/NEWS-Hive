@@ -1,11 +1,10 @@
-# scraper.py
-
-import sys
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+CORS(app)
 
 def extract_with_bs4(url):
     try:
@@ -26,16 +25,16 @@ def extract_with_bs4(url):
 
     except Exception as e:
         print(f"Error: {e}")
-        return ""
+        return str(e)
 
 @app.route('/scrape', methods=['GET'])
-def scrape_news_content():
-    news_url = request.args.get('url')
-    if not news_url:
-        return jsonify({"error": "URL parameter is required."}), 400
-    
-    content = extract_with_bs4(news_url)
-    return jsonify({"content": content})
+def scrape_endpoint():
+    url = request.args.get('url')
+    if not url:
+        return jsonify({'error': 'URL parameter is required'}), 400
+        
+    content = extract_with_bs4(url)
+    return jsonify({'content': content})
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5001)  # Flask server runs on port 5001
+if __name__ == '__main__':
+    app.run(port=5001)

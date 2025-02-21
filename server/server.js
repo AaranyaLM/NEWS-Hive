@@ -28,7 +28,7 @@ app.get('/api/news', (req, res) => {
         filteredArticles = filteredArticles.filter(article =>
           article.source.name.toLowerCase().includes(query.toLowerCase())
         );
-      } 
+      }
 
       res.json(filteredArticles);
     })
@@ -56,13 +56,10 @@ app.get('/api/trending', (req, res) => {
       console.error(err);
       res.status(500).send('Error fetching trending news');
     });
-});
+}); 
 
 
 
 app.listen(5000, () => {
   console.log('Server started on http://localhost:5000');
 });
-
-
-

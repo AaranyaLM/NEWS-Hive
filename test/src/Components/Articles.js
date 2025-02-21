@@ -1,14 +1,28 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Articles.css';
 
 const Articles = ({ articles }) => {
+  const navigate = useNavigate();
+
   const getFaviconUrl = (url) => {
     try {
       const domain = new URL(url).hostname;
       return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
     } catch (error) {
-      return null; // Return null if URL is invalid
+      return null;
     }
+  };
+
+  const handleReadMore = (article, e) => {
+    e.preventDefault();
+    
+    // Store the article data in sessionStorage
+    sessionStorage.setItem('currentArticle', JSON.stringify(article));
+    
+    // Open content page in new tab
+    const contentUrl = `${window.location.origin}/content`;
+    window.open(contentUrl, '_blank');
   };
 
   return (
@@ -33,9 +47,12 @@ const Articles = ({ articles }) => {
               <div className="article-actions">
                 <button>👍 Like</button>
                 <button>🔗 Share</button>
-                <a href={article.url} target="_blank" rel="noopener noreferrer">
+                <button 
+                  onClick={(e) => handleReadMore(article, e)}
+                  className="read-more-button"
+                >
                   Read More
-                </a>
+                </button>
               </div>
             </div>
           );
