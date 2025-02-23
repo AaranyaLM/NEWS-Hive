@@ -5,11 +5,12 @@ import './Searchbar.css';
 const Searchbar = ({ onSearch }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterBy, setFilterBy] = useState('');
+  const [sortBy, setSortBy] = useState('relevancy');
 
   // Debounce the search function
   const debouncedSearch = useCallback(
-    debounce((search, filter) => {
-      onSearch(search, filter);
+    debounce((search, filter, sort) => {
+      onSearch(search, filter, sort);
     }, 200),
     []
   );
@@ -17,13 +18,19 @@ const Searchbar = ({ onSearch }) => {
   const handleSearchChange = (e) => {
     const newSearchKeyword = e.target.value;
     setSearchKeyword(newSearchKeyword);
-    debouncedSearch(newSearchKeyword, filterBy);
+    debouncedSearch(newSearchKeyword, filterBy, sortBy);
   };
 
   const handleFilterChange = (e) => {
     const newFilter = e.target.value;
     setFilterBy(newFilter);
-    debouncedSearch(searchKeyword, newFilter);
+    debouncedSearch(searchKeyword, newFilter, sortBy);
+  };
+
+  const handleSortChange = (e) => {
+    const newSort = e.target.value;
+    setSortBy(newSort);
+    debouncedSearch(searchKeyword, filterBy, newSort);
   };
 
   return (
@@ -42,6 +49,15 @@ const Searchbar = ({ onSearch }) => {
       >
         <option value="">Keyword</option>
         <option value="source">Source</option>
+      </select>
+      <select
+        value={sortBy}
+        onChange={handleSortChange}
+        className="filter-select"
+      >
+        <option value="relevancy">Relevance</option>
+        <option value="publishedAt">Latest</option>
+        <option value="popularity">Popularity</option>
       </select>
     </div>
   );

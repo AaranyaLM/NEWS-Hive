@@ -6,9 +6,8 @@ import './Homepage.css';
 
 const Trending = () => {
   const [search, setSearch] = useState('');
-  const [locale, setLocale] = useState('us'); // Default to US
+  const [locale, setLocale] = useState('us'); // Changed to lowercase
   const [category, setCategory] = useState('');
-  const [sortBy, setSortBy] = useState('relevancy'); // Default sorting
 
   return (
     <div className="Homepage">
@@ -17,9 +16,8 @@ const Trending = () => {
         search={search} setSearch={setSearch}
         locale={locale} setLocale={setLocale}
         category={category} setCategory={setCategory}
-        sortBy={sortBy} setSortBy={setSortBy}
       />
-      <TrendingFeed search={search} locale={locale} category={category} sortBy={sortBy} />
+      <TrendingFeed search={search} locale={locale} category={category} />
     </div>
   );
 };

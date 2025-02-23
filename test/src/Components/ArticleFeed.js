@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import Articles from './Articles';
 
-const ArticleFeed = ({ query, filter }) => {
+const ArticleFeed = ({ query, filter, sort }) => {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/news?q=${query}&filterBy=${filter}`);
+        const params = new URLSearchParams({
+          q: query,
+          filterBy: filter,
+          sortBy: sort
+        });
+        const response = await fetch(`http://localhost:5000/api/news?${params}`);
         const data = await response.json();
         setArticles(data);
       } catch (err) {
@@ -16,7 +21,7 @@ const ArticleFeed = ({ query, filter }) => {
     };
 
     fetchNews();
-  }, [query, filter]);
+  }, [query, filter, sort]);
 
   return <Articles articles={articles} />;
 };

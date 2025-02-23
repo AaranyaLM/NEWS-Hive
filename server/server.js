@@ -14,12 +14,14 @@ app.get('/api/news', (req, res) => {
     .split('T')[0];
   const query = req.query.q || 'bitcoin'; // Default query
   const filterBy = req.query.filterBy || null; // Filter criteria (source or author)
+  const sortBy = req.query.sortBy || 'relevancy'; // Default sort
 
   newsapi.v2
     .everything({
       q: query,
       from: last30Days,
       to: currentDate,
+      sortBy: sortBy, // Add sortBy parameter
     })
     .then(response => {
       let filteredArticles = response.articles;
@@ -39,26 +41,32 @@ app.get('/api/news', (req, res) => {
 });
 
 
-
 //For Trending
 app.get('/api/trending', (req, res) => {
   const { q, country, category, sortBy } = req.query;
 
-  const options = {};
+  const options = {
+    country: country.toLowerCase() 
+  };
+  if (!options.country) {
+    options.country = 'us'; 
+  }
 
-  if (country) options.country = country;  // Only set if provided
-  if (category) options.category = category;
-  if (q) options.q = q;
-  if (sortBy) options.sortBy = sortBy || 'relevancy';
+  if (category && category !== '') options.category = category;
+  if (q && q !== '') options.q = q;
 
+  console.log('API Request Options:', options); 
   newsapi.v2
     .topHeadlines(options)
-    .then(response => res.json(response.articles))
+    .then(response => {
+      console.log('API Response Status:', response.status); 
+      res.json(response.articles);
+    })
     .catch(err => {
-      console.error(err);
+      console.error('News API Error:', err);
       res.status(500).send('Error fetching trending news');
     });
-}); 
+});
 
 
 //Server start confirmation
