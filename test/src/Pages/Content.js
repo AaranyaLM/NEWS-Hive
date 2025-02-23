@@ -58,21 +58,14 @@ const Content = () => {
     <Navbar/>
     <div className="content-page">
       <div className="article-container">
-        {/* Article Title */}
         <h1 className="article-title">{article.title}</h1>
-
-        {/* Publisher Info */}
         <div className="publisher-info">
           {getFaviconUrl(article.url) && (
             <img src={getFaviconUrl(article.url)} alt="Source Logo" className="favicon" />
           )}
           <span className="publisher-name">{article.source.name || "Unknown Source"}</span>
         </div>
-
-        {/* Timestamp */}
         <div className="time-stamp">{new Date(article.publishedAt).toLocaleString()}</div>
-
-        {/* Full-size Image */}
         {article.urlToImage && <img src={article.urlToImage} alt="Article" className="full-image" />}
 
         {/* Article Content */}

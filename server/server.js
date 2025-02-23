@@ -38,6 +38,8 @@ app.get('/api/news', (req, res) => {
     });
 });
 
+
+
 //For Trending
 app.get('/api/trending', (req, res) => {
   const { q, country, category, sortBy } = req.query;
@@ -59,7 +61,7 @@ app.get('/api/trending', (req, res) => {
 }); 
 
 
-
+//Server start confirmation
 app.listen(5000, () => {
   console.log('Server started on http://localhost:5000');
 });

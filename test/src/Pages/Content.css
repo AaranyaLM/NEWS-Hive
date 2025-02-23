@@ -80,7 +80,7 @@
   .visit-source-btn {
     display: block;
     text-align: center;
-    background-color: #007bff;
+    background-color: #000000;
     color: white;
     padding: 10px 20px;
     margin-top: 20px;
@@ -91,6 +91,6 @@
   }
   
   .visit-source-btn:hover {
-    background-color: #0056b3;
+    background-color: #848484;
   }
   
