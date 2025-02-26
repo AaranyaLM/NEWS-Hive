@@ -16,8 +16,9 @@ function Navbar() {
                 <Link to="/trending">Trending</Link>
             </div>
             <div className="auth-buttons">
-                <button className="login-btn">Login</button>
-                <button className="signup-btn">Sign Up</button>
+                {/* <button className="login-btn">Login</button>
+                <button className="signup-btn">Sign Up</button> */}
+                <button><Link to ="/userauth">Username</Link></button>
             </div>
         </div>
     );

@@ -1,7 +1,6 @@
-
 .navbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
     padding: 10px;
     background-color: white;
@@ -62,3 +61,4 @@
 .navigation a:hover{
     color: #6b7280;
 }
+

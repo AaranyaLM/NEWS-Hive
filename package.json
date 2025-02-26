@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "bootstrap": "^5.3.3",
     "cors": "^2.8.5",
     "newsapi": "^2.4.1",
     "react": "^19.0.0",
