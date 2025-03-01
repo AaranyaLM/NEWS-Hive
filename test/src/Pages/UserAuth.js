@@ -30,9 +30,7 @@ function UserAuth() {
                     <div className='input-group mb-3'>
                         <input type='password' placeholder='Password' className='form-control' />
                     </div>
-                    <div className='input-group mb-3'>
-                        <input type='password' placeholder='Password' className='form-control' />
-                    </div>
+                    
                     <div className='input-group mb-3 justify-content-center'>
                         <button type="submit" className='btn border-white text-white w-50 fs-6'>Register</button>
                     </div>

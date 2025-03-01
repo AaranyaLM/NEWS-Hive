@@ -8,10 +8,10 @@ app.use(cors());
 
 // Endpoint to fetch news with dynamic query
 app.get('/api/news', (req, res) => {
-  const currentDate = new Date().toISOString().split('T')[0];
-  const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
+  // const currentDate = new Date().toISOString().split('T')[0];
+  // const last30Days = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000)
+  //   .toISOString()
+  //   .split('T')[0];
   const query = req.query.q || 'bitcoin'; // Default query
   const filterBy = req.query.filterBy || null; // Filter criteria (source or author)
   const sortBy = req.query.sortBy || 'relevancy'; // Default sort
@@ -19,8 +19,8 @@ app.get('/api/news', (req, res) => {
   newsapi.v2
     .everything({
       q: query,
-      from: last30Days,
-      to: currentDate,
+      // from: last30Days,
+      // to: currentDate,
       sortBy: sortBy, // Add sortBy parameter
     })
     .then(response => {
