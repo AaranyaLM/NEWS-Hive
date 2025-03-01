@@ -4,14 +4,28 @@ import Homepage from './Pages/Homepage';
 import Trending from './Pages/Trending';
 import Content from './Pages/Content';
 import UserAuth from './Pages/UserAuth';
+import ProtectedRoute from './Components/ProtectedRoute';
+
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Homepage />} />
         <Route path="/userauth" element={<UserAuth />} />
-        <Route path="/trending" element={<Trending />} />
-        <Route path="/content" element={<Content />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Homepage />
+          </ProtectedRoute>
+        } />
+        <Route path="/trending" element={
+          <ProtectedRoute>
+            <Trending />
+          </ProtectedRoute>
+        } />
+        <Route path="/content" element={
+          <ProtectedRoute>
+            <Content />
+          </ProtectedRoute>
+        } />
       </Routes>
     </Router>
   );

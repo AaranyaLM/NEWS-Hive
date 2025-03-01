@@ -12,7 +12,10 @@ const ArticleFeed = ({ query, filter, sort }) => {
           filterBy: filter,
           sortBy: sort
         });
-        const response = await fetch(`http://localhost:5000/api/news?${params}`);
+        const response = await fetch(`http://localhost:5000/api/news?${params}`,{
+          method: 'GET',
+          credentials: 'include',
+        });
         const data = await response.json();
         setArticles(data);
       } catch (err) {

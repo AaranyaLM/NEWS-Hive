@@ -1,53 +1,204 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './UserAuth.css';
-import logo from '../Images/WhiteLogo.png'; // Import the logo
+import logo from '../Images/WhiteLogo.png';
 
 function UserAuth() {
     const [isActive, setIsActive] = useState(false);
+    const navigate = useNavigate();
+    
+    // Register form state
+    const [registerData, setRegisterData] = useState({
+        username: '',
+        email: '',
+        password: ''
+    });
+    
+    // Login form state
+    const [loginData, setLoginData] = useState({
+        email: '',
+        password: ''
+    });
+    
+    // Error and loading states
+    const [registerError, setRegisterError] = useState('');
+    const [loginError, setLoginError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const switchToRegister = () => {
         setIsActive(true);
+        setLoginError('');
     };
 
     const switchToLogin = () => {
         setIsActive(false);
+        setRegisterError('');
+    };
+    
+    // Handle register form changes
+    const handleRegisterChange = (e) => {
+        const { name, value } = e.target;
+        setRegisterData({
+            ...registerData,
+            [name]: value
+        });
+    };
+    
+    // Handle login form changes
+    const handleLoginChange = (e) => {
+        const { name, value } = e.target;
+        setLoginData({
+            ...loginData,
+            [name]: value
+        });
+    };
+    
+    // Handle register form submission
+    const handleRegisterSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setRegisterError('');
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(registerData),
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
+            }
+            
+            // Registration successful, redirect to homepage
+            navigate('/');
+        } catch (error) {
+            setRegisterError(error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    // Handle login form submission
+    const handleLoginSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setLoginError('');
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(loginData),
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+            
+            // Login successful, redirect to homepage
+            navigate('/');
+        } catch (error) {
+            setLoginError(error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
         <div className={`content justify-content-center align-items-center d-flex shadow-lg ${isActive ? "active" : ""}`} id='content'>
             {/* Registration */}
             <div className='col-md-6 d-flex justify-content-center'>
-               <form>
+               <form onSubmit={handleRegisterSubmit}>
                     <div className="header-text mb-4">
                         <h1>Create Account</h1>
+                        {registerError && <div className="alert alert-danger">{registerError}</div>}
                     </div>
                     <div className='input-group mb-3'>
-                        <input type='text' placeholder='Username' className='form-control' />
+                        <input 
+                            type='text' 
+                            name='username'
+                            placeholder='Username' 
+                            className='form-control'
+                            value={registerData.username}
+                            onChange={handleRegisterChange}
+                            required
+                        />
                     </div>
                     <div className='input-group mb-3'>
-                        <input type='email' placeholder='Email' className='form-control' />
+                        <input 
+                            type='email' 
+                            name='email'
+                            placeholder='Email' 
+                            className='form-control'
+                            value={registerData.email}
+                            onChange={handleRegisterChange}
+                            required
+                        />
                     </div>
                     <div className='input-group mb-3'>
-                        <input type='password' placeholder='Password' className='form-control' />
+                        <input 
+                            type='password' 
+                            name='password'
+                            placeholder='Password' 
+                            className='form-control'
+                            value={registerData.password}
+                            onChange={handleRegisterChange}
+                            required
+                        />
                     </div>
                     
                     <div className='input-group mb-3 justify-content-center'>
-                        <button type="submit" className='btn border-white text-white w-50 fs-6'>Register</button>
+                        <button 
+                            type="submit" 
+                            className='btn border-white text-white w-50 fs-6'
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Registering...' : 'Register'}
+                        </button>
                     </div>
                 </form> 
             </div>
 
             {/* Login */}
             <div className='col-md-6 right-box'>
-               <form>
+               <form onSubmit={handleLoginSubmit}>
                     <div className="header-text mb-4">
                         <h1>Log In</h1>
+                        {loginError && <div className="alert alert-danger">{loginError}</div>}
                     </div>
                     <div className='input-group mb-3'>
-                        <input type='email' placeholder='Email' className='form-control' />
+                        <input 
+                            type='email' 
+                            name='email'
+                            placeholder='Email' 
+                            className='form-control'
+                            value={loginData.email}
+                            onChange={handleLoginChange}
+                            required
+                        />
                     </div>
                     <div className='input-group mb-3'>
-                        <input type='password' placeholder='Password' className='form-control' />
+                        <input 
+                            type='password' 
+                            name='password'
+                            placeholder='Password' 
+                            className='form-control'
+                            value={loginData.password}
+                            onChange={handleLoginChange}
+                            required
+                        />
                     </div>
                     <div className='input-group mb-5 d-flex justify-content-between'>
                         <div className='forgot'>
@@ -55,7 +206,13 @@ function UserAuth() {
                         </div>
                     </div>
                     <div className='input-group mb-3 justify-content-center'>
-                        <button type="submit" className='btn border-white text-white w-50 fs-6'>Login</button>
+                        <button 
+                            type="submit" 
+                            className='btn border-white text-white w-50 fs-6'
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Logging in...' : 'Login'}
+                        </button>
                     </div>
                 </form> 
             </div>

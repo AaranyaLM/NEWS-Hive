@@ -14,7 +14,10 @@ const TrendingFeed = ({ search, locale, category, sortBy }) => {
           sortBy: sortBy,
         }).toString();
 
-        const response = await fetch(`http://localhost:5000/api/trending?${queryParams}`);
+        const response = await fetch(`http://localhost:5000/api/trending?${queryParams}`,{
+          method: 'GET',
+          credentials: 'include',
+        });
         const data = await response.json();
         setArticles(data);
       } catch (err) {

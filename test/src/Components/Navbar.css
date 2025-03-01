@@ -10,7 +10,7 @@
 }
 
 .navbar div{
-    padding: 9px 45px 6px;
+    padding: 9px 30px 6px;
 }
 
 
@@ -68,3 +68,31 @@
     color: #6b7280;
 }
 
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.username {
+    font-weight: 500;
+    color: #333;
+    margin-right: 5px;
+}
+
+.logout-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #d3d3d3;
+    color: #dc3545;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.logout-btn:hover {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
