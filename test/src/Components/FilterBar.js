@@ -11,12 +11,12 @@ const FilterBar = ({ search, setSearch, locale, setLocale, category, setCategory
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <select className="filter-select" value={locale} onChange={(e) => setLocale(e.target.value)}>
+      {/* <select className="filter-select" value={locale} onChange={(e) => setLocale(e.target.value)}>
         <option value="us">United States</option>
         <option value="gb">United Kingdom</option>
         <option value="in">India</option>
         <option value="ca">Canada</option>
-      </select>
+      </select> */}
       <select className="filter-select" value={category} onChange={(e) => setCategory(e.target.value)}>
         <option value="">All Categories</option>
         <option value="business">Business</option>

@@ -6,7 +6,7 @@ import './Homepage.css';
 
 const Trending = () => {
   const [search, setSearch] = useState('');
-  const [locale, setLocale] = useState('us'); // Changed to lowercase
+  const [locale, setLocale] = useState('us'); 
   const [category, setCategory] = useState('');
 
   return (

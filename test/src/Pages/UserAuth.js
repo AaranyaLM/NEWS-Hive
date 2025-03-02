@@ -117,6 +117,8 @@ function UserAuth() {
     };
 
     return (
+        <div id="user-auth-container">
+             <div id="blur-overlay"></div>
         <div className={`content justify-content-center align-items-center d-flex shadow-lg ${isActive ? "active" : ""}`} id='content'>
             {/* Registration */}
             <div className='col-md-6 d-flex justify-content-center'>
@@ -234,6 +236,7 @@ function UserAuth() {
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 }
