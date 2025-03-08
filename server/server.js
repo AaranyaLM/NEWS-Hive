@@ -239,7 +239,6 @@ app.post('/api/auth/logout', (req, res) => {
 
 // Protect API routes with authentication middleware
 
-
 //Homepage
 app.get('/api/news', isAuthenticated, (req, res) => {
   console.log('Session User:', req.session.user);
