@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 const app = express();
 const NewsAPI = require('newsapi');
 const newsapi = new NewsAPI('c31a65d1df3d4f49a2b9fb548e99bb0b');
@@ -26,6 +28,15 @@ const sessionStore = new MySQLStore({
   expiration: 86400000, // Session expiration (24 hours)
   createDatabaseTable: true // Create sessions table if it doesn't exist
 }, pool);
+
+// Configure nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Or any other email service
+  auth: {
+    user: 'aaranyalalmaskey@gmail.com', // Your email address
+    pass: 'dhpw igla rzzj nhkg' // Your app password (not your regular password)
+  }
+});
 
 // Middleware
 app.use(cors({
@@ -78,7 +89,7 @@ app.get('/api/auth/status', (req, res) => {
   }
 });
 
-// Register endpoint
+// Modified register endpoint
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -121,27 +132,40 @@ app.post('/api/auth/register', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
-    // Insert new user
+    // Generate verification code
+    const verificationCode = crypto.randomInt(100000, 999999).toString();
+    const codeExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiry
+    
+    // Insert new user (unverified)
     const [result] = await pool.query(
-      'INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())',
-      [username, email, hashedPassword]
+      'INSERT INTO users (username, email, password_hash, verification_code, code_expiry, is_verified, created_at) VALUES (?, ?, ?, ?, ?, FALSE, NOW())',
+      [username, email, hashedPassword, verificationCode, codeExpiry]
     );
     
-    // Create session for the new user
-    req.session.user = {
-      id: result.insertId,
-      username,
-      email
+    // Send verification email
+    const mailOptions = {
+      from: 'aaranyalalmaskey@gmail.com',
+      to: email,
+      subject: 'News Hive - Email Verification',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to News Hive!</h2>
+          <p>Thank you for registering with us. To complete your registration, please use the verification code below:</p>
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px;">
+            ${verificationCode}
+          </div>
+          <p>This code will expire in 1 hour.</p>
+          <p>If you did not register for News Hive, please disregard this email.</p>
+        </div>
+      `
     };
+    
+    await transporter.sendMail(mailOptions);
     
     res.status(201).json({
       success: true,
-      message: 'Registration successful',
-      user: {
-        id: result.insertId,
-        username,
-        email
-      }
+      message: 'Registration successful. Please check your email for verification code.',
+      userId: result.insertId
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -152,7 +176,143 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// Login endpoint
+// New endpoint to verify email
+app.post('/api/auth/verify', async (req, res) => {
+  try {
+    const { userId, verificationCode } = req.body;
+    
+    // Find user by ID
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Check if account is already verified
+    if (user.is_verified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Account already verified'
+      });
+    }
+    
+    // Check if verification code is correct and not expired
+    if (user.verification_code !== verificationCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid verification code'
+      });
+    }
+    
+    const now = new Date();
+    const codeExpiry = new Date(user.code_expiry);
+    
+    if (now > codeExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification code expired'
+      });
+    }
+    
+    // Mark user as verified
+    await pool.query(
+      'UPDATE users SET is_verified = TRUE, verification_code = NULL, code_expiry = NULL WHERE id = ?',
+      [userId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Email verified successfully. You can now log in.'
+    });
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during verification'
+    });
+  }
+});
+
+// New endpoint to resend verification code
+app.post('/api/auth/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Find user by email
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Check if account is already verified
+    if (user.is_verified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Account already verified'
+      });
+    }
+    
+    // Generate new verification code
+    const newVerificationCode = crypto.randomInt(100000, 999999).toString();
+    const codeExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiry
+    
+    // Update user's verification code
+    await pool.query(
+      'UPDATE users SET verification_code = ?, code_expiry = ? WHERE id = ?',
+      [newVerificationCode, codeExpiry, user.id]
+    );
+    
+    // Send new verification email
+    const mailOptions = {
+      from: 'aaranyalalmaskey@gmail.com',
+      to: email,
+      subject: 'News Hive - New Verification Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>News Hive - New Verification Code</h2>
+          <p>You requested a new verification code. Please use the code below to verify your email:</p>
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px;">
+            ${newVerificationCode}
+          </div>
+          <p>This code will expire in 1 hour.</p>
+        </div>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    
+    res.json({
+      success: true,
+      message: 'New verification code sent',
+      userId: user.id
+    });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error when resending verification code'
+    });
+  }
+});
+
+// Modified login endpoint
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -179,6 +339,16 @@ app.post('/api/auth/login', async (req, res) => {
     }
     
     const user = users[0];
+    
+    // Check if user is verified
+    if (!user.is_verified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email before logging in',
+        userId: user.id,
+        requiresVerification: true
+      });
+    }
     
     // Check password
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
@@ -233,13 +403,7 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
-
-
-
-
-// Protect API routes with authentication middleware
-
-//Homepage
+// Protected API routes
 app.get('/api/news', isAuthenticated, (req, res) => {
   console.log('Session User:', req.session.user);
   const query = req.query.q || 'bitcoin';
@@ -268,8 +432,6 @@ app.get('/api/news', isAuthenticated, (req, res) => {
     });
 });
 
-
-//Trending
 app.get('/api/trending', isAuthenticated, (req, res) => {
   const { q, country, category, sortBy } = req.query;
 
