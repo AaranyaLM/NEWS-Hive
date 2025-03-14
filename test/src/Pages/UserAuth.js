@@ -54,36 +54,46 @@ function UserAuth() {
     };
     
     // Handle register form submission
-    const handleRegisterSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setRegisterError('');
-        
-        try {
-            const response = await fetch('http://localhost:5000/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(registerData),
-                credentials: 'include'
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Registration failed');
-            }
-            
-            // Registration successful, redirect to homepage
-            navigate('/');
-        } catch (error) {
-            setRegisterError(error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  // Add a success state variable
+const [registerSuccess, setRegisterSuccess] = useState(false);
+
+// Modify the handleRegisterSubmit function
+const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setRegisterError('');
     
+    try {
+        const response = await fetch('http://localhost:5000/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(registerData),
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Registration failed');
+        }
+        
+        // Set success state to true and reset form
+        setRegisterSuccess(true);
+        setRegisterData({
+            username: '',
+            email: '',
+            password: ''
+        });
+        
+        // No navigation/redirect here
+    } catch (error) {
+        setRegisterError(error.message);
+    } finally {
+        setIsLoading(false);
+    }
+};
     // Handle login form submission
     const handleLoginSubmit = async (e) => {
         e.preventDefault();
@@ -126,6 +136,7 @@ function UserAuth() {
                     <div className="header-text mb-4">
                         <h1>Create Account</h1>
                         {registerError && <div className="alert alert-danger">{registerError}</div>}
+                        {registerSuccess && <div className="alert alert-success">Registration successful! You can now log in.</div>}
                     </div>
                     <div className='input-group mb-3'>
                         <input 
