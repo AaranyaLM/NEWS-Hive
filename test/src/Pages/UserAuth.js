@@ -112,6 +112,9 @@ function UserAuth() {
                 email: '',
                 password: ''
             });
+            setTimeout(() => {
+                setRegisterSuccess(false);
+            }, 4000);
         } catch (error) {
             setRegisterError(error.message);
         } finally {
@@ -158,7 +161,7 @@ function UserAuth() {
                 setVerificationStep(false);
                 setIsActive(false);
                 setVerificationSuccess(false);
-            }, 3000);
+            }, 1500);
         } catch (error) {
             setVerificationError(error.message);
         } finally {
@@ -364,6 +367,7 @@ function UserAuth() {
                 <div className='col-md-6 right-box'>
                     <form onSubmit={handleLoginSubmit}>
                         <div className="header-text mb-4">
+                        {verificationSuccess && <div className="alert alert-success">Email verified successfully! You can now log in.</div>}
                             <h1>Log In</h1>
                             {loginError && <div className="alert alert-danger">{loginError}</div>}
                         </div>

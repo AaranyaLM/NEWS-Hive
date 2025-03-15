@@ -146,16 +146,32 @@ app.post('/api/auth/register', async (req, res) => {
     const mailOptions = {
       from: 'aaranyalalmaskey@gmail.com',
       to: email,
-      subject: 'News Hive - Email Verification',
+      subject: 'Verify Your Email - News Hive',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Welcome to News Hive!</h2>
-          <p>Thank you for registering with us. To complete your registration, please use the verification code below:</p>
-          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #ffffff;">
+          <div style="text-align: center;">
+            <img src="https://i.imgur.com/n0OYGa6.png" alt="News Hive Logo" style="max-width: 120px; margin-bottom: 20px;">
+          </div>
+          
+          <h2 style="color: #333; text-align: center;">Welcome to News Hive!</h2>
+          <p style="font-size: 16px; color: #555; text-align: center;">
+            Thank you for signing up with <strong>News Hive</strong>. To complete your registration, please verify your email address by entering the code below:
+          </p>
+          
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
             ${verificationCode}
           </div>
-          <p>This code will expire in 1 hour.</p>
-          <p>If you did not register for News Hive, please disregard this email.</p>
+    
+          
+          <p style="font-size: 14px; color: #777; text-align: center; margin-top: 20px;">
+            This code will expire in <strong>1 hour</strong>. If you did not sign up for News Hive, please ignore this email.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+          
+          <p style="font-size: 12px; color: #777; text-align: center;">
+            Need help? Contact us at <a href="mailto:aaranyalalmaskey@gmail.com" style="color: #007bff; text-decoration: none;">support@newshive.com</a>
+          </p>
         </div>
       `
     };
@@ -285,13 +301,30 @@ app.post('/api/auth/resend-verification', async (req, res) => {
       to: email,
       subject: 'News Hive - New Verification Code',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>News Hive - New Verification Code</h2>
-          <p>You requested a new verification code. Please use the code below to verify your email:</p>
-          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px;">
+       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #ffffff;">
+          <div style="text-align: center;">
+            <img src="https://i.imgur.com/n0OYGa6.png" alt="News Hive Logo" style="max-width: 120px; margin-bottom: 20px;">
+          </div>
+          
+          <h2 style="color: #333; text-align: center;">Welcome to News Hive!</h2>
+          <p style="font-size: 16px; color: #555; text-align: center;">
+            Thank you for signing up with <strong>News Hive</strong>. To complete your registration, please verify your email address by entering the code below:
+          </p>
+          
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
             ${newVerificationCode}
           </div>
-          <p>This code will expire in 1 hour.</p>
+    
+          
+          <p style="font-size: 14px; color: #777; text-align: center; margin-top: 20px;">
+            This code will expire in <strong>1 hour</strong>. If you did not sign up for News Hive, please ignore this email.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+          
+          <p style="font-size: 12px; color: #777; text-align: center;">
+            Need help? Contact us at <a href="mailto:aaranyalalmaskey@gmail.com" style="color: #007bff; text-decoration: none;">support@newshive.com</a>
+          </p>
         </div>
       `
     };
