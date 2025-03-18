@@ -144,7 +144,7 @@ app.post('/api/auth/register', async (req, res) => {
     
     // Send verification email
     const mailOptions = {
-      from: 'aaranyalalmaskey@gmail.com',
+      from: 'News Hive <aaranyalalmaskey@gmail.com>',
       to: email,
       subject: 'Verify Your Email - News Hive',
       html: `
@@ -297,7 +297,7 @@ app.post('/api/auth/resend-verification', async (req, res) => {
     
     // Send new verification email
     const mailOptions = {
-      from: 'aaranyalalmaskey@gmail.com',
+      from: 'News Hive <aaranyalalmaskey@gmail.com>',
       to: email,
       subject: 'News Hive - New Verification Code',
       html: `
@@ -436,6 +436,301 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+
+// Forgot password endpoint
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Validate input
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email is required' 
+      });
+    }
+    
+    // Find user by email
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with this email'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Generate reset code
+    const resetCode = crypto.randomInt(100000, 999999).toString();
+    const codeExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes expiry
+    
+    // Update user's verification code
+    await pool.query(
+      'UPDATE users SET verification_code = ?, code_expiry = ? WHERE id = ?',
+      [resetCode, codeExpiry, user.id]
+    );
+    
+    // Send password reset email
+    const mailOptions = {
+      from: 'News Hive <aaranyalalmaskey@gmail.com>',
+      to: email,
+      subject: 'Password Reset - News Hive',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #ffffff;">
+          <div style="text-align: center;">
+            <img src="https://i.imgur.com/n0OYGa6.png" alt="News Hive Logo" style="max-width: 120px; margin-bottom: 20px;">
+          </div>
+          
+          <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
+          <p style="font-size: 16px; color: #555; text-align: center;">
+            You requested to reset your password for <strong>News Hive</strong>. Please use the verification code below:
+          </p>
+          
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+            ${resetCode}
+          </div>
+          
+          <p style="font-size: 14px; color: #777; text-align: center; margin-top: 20px;">
+            This code will expire in <strong>30 minutes</strong>. If you did not request this password reset, please ignore this email or contact support.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+          
+          <p style="font-size: 12px; color: #777; text-align: center;">
+            Need help? Contact us at <a href="mailto:aaranyalalmaskey@gmail.com" style="color: #007bff; text-decoration: none;">support@newshive.com</a>
+          </p>
+        </div>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    
+    res.json({
+      success: true,
+      message: 'Password reset code sent to your email',
+      userId: user.id
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during password reset request'
+    });
+  }
+});
+
+// Verify reset code endpoint
+app.post('/api/auth/verify-reset-code', async (req, res) => {
+  try {
+    const { userId, verificationCode } = req.body;
+    
+    // Validate input
+    if (!userId || !verificationCode) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User ID and verification code are required' 
+      });
+    }
+    
+    // Find user by ID
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Check if verification code is correct and not expired
+    if (user.verification_code !== verificationCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid verification code'
+      });
+    }
+    
+    const now = new Date();
+    const codeExpiry = new Date(user.code_expiry);
+    
+    if (now > codeExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification code expired'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Code verified successfully'
+    });
+  } catch (error) {
+    console.error('Verify reset code error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during code verification'
+    });
+  }
+});
+
+// Reset password endpoint
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { userId, password } = req.body;
+    
+    // Validate input
+    if (!userId || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User ID and new password are required' 
+      });
+    }
+    
+    // Find user by ID
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Check if user has a valid verification code (has gone through the reset process)
+    if (!user.verification_code) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid password reset request'
+      });
+    }
+    
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
+    // Update user's password and clear verification code
+    await pool.query(
+      'UPDATE users SET password_hash = ?, verification_code = NULL, code_expiry = NULL WHERE id = ?',
+      [hashedPassword, userId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Password reset successful'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during password reset'
+    });
+  }
+});
+
+// Resend reset code endpoint
+app.post('/api/auth/resend-reset-code', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Validate input
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email is required' 
+      });
+    }
+    
+    // Find user by email
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with this email'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Generate new reset code
+    const resetCode = crypto.randomInt(100000, 999999).toString();
+    const codeExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes expiry
+    
+    // Update user's verification code
+    await pool.query(
+      'UPDATE users SET verification_code = ?, code_expiry = ? WHERE id = ?',
+      [resetCode, codeExpiry, user.id]
+    );
+    
+    // Send new reset code email
+    const mailOptions = {
+      from: 'News Hive <aaranyalalmaskey@gmail.com>',
+      to: email,
+      subject: 'New Password Reset Code - News Hive',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #ffffff;">
+          <div style="text-align: center;">
+            <img src="https://i.imgur.com/n0OYGa6.png" alt="News Hive Logo" style="max-width: 120px; margin-bottom: 20px;">
+          </div>
+          
+          <h2 style="color: #333; text-align: center;">New Password Reset Code</h2>
+          <p style="font-size: 16px; color: #555; text-align: center;">
+            You requested a new code to reset your password for <strong>News Hive</strong>. Please use the verification code below:
+          </p>
+          
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+            ${resetCode}
+          </div>
+          
+          <p style="font-size: 14px; color: #777; text-align: center; margin-top: 20px;">
+            This code will expire in <strong>30 minutes</strong>. If you did not request this password reset, please ignore this email or contact support.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+          
+          <p style="font-size: 12px; color: #777; text-align: center;">
+            Need help? Contact us at <a href="mailto:aaranyalalmaskey@gmail.com" style="color: #007bff; text-decoration: none;">support@newshive.com</a>
+          </p>
+        </div>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    
+    res.json({
+      success: true,
+      message: 'New password reset code sent to your email',
+      userId: user.id
+    });
+  } catch (error) {
+    console.error('Resend reset code error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error when resending reset code'
+    });
+  }
+});
+
+
+// For the feeds
 // Protected API routes
 app.get('/api/news', isAuthenticated, (req, res) => {
   console.log('Session User:', req.session.user);

@@ -296,7 +296,7 @@ form {
 .btn-link {
     background: none;
     border: none;
-    color: #007bff;
+    color: #ffffff;
     padding: 5px;
     text-decoration: underline;
     cursor: pointer;
@@ -306,8 +306,8 @@ form {
 }
 
 .btn-link:hover {
-    color: #0056b3;
+    color: #ffffff;
     background: none;
-    text-decoration: underline;
+    text-decoration: none;
     transform: none;
 }

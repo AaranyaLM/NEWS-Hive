@@ -4,6 +4,7 @@ import Homepage from './Pages/Homepage';
 import Trending from './Pages/Trending';
 import Content from './Pages/Content';
 import UserAuth from './Pages/UserAuth';
+import ForgotPassword from './Pages/ForgotPassword'; 
 import ProtectedRoute from './Components/ProtectedRoute';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/userauth" element={<UserAuth />} />
+        <Route path="/forgot" element={<ForgotPassword />} /> 
         <Route path="/" element={
           <ProtectedRoute>
             <Homepage />

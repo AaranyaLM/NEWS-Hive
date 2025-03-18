@@ -394,10 +394,10 @@ function UserAuth() {
                             />
                         </div>
                         <div className='input-group mb-5 d-flex justify-content-between'>
-                            <div className='forgot'>
-                                <small><a href='#'>Forgot Password?</a></small>
-                            </div>
-                        </div>
+    <div className='forgot'>
+        <small><a href='/forgot'>Forgot Password?</a></small>
+    </div>
+</div>
                         <div className='input-group mb-3 justify-content-center'>
                             <button 
                                 type="submit" 
