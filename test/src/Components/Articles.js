@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Articles.css';
+import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt } from 'react-icons/fa';
 
 const Articles = ({ articles }) => {
   const navigate = useNavigate();
+  const [likedArticles, setLikedArticles] = useState({});
+  const [shared, setShared] = useState(null);
 
   const getFaviconUrl = (url) => {
     try {
@@ -16,13 +19,23 @@ const Articles = ({ articles }) => {
 
   const handleReadMore = (article, e) => {
     e.preventDefault();
-    
-    // Store the article data in sessionStorage
     sessionStorage.setItem('currentArticle', JSON.stringify(article));
-    
-    // Open content page in new tab
     const contentUrl = `${window.location.origin}/content`;
     window.open(contentUrl, '_blank');
+  };
+
+  const toggleLike = (index) => {
+    setLikedArticles((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const handleShare = (articleUrl, index) => {
+    navigator.clipboard.writeText(articleUrl).then(() => {
+      setShared(index);
+      setTimeout(() => setShared(null), 2000);
+    });
   };
 
   return (
@@ -45,12 +58,13 @@ const Articles = ({ articles }) => {
                 <p>{article.description}</p>
               </div>
               <div className="article-actions">
-                <button>👍 Like</button>
-                <button>🔗 Share</button>
-                <button 
-                  onClick={(e) => handleReadMore(article, e)}
-                  className="read-more-button"
-                >
+                <button onClick={() => toggleLike(index)} className="like-button">
+                  {likedArticles[index] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#666" />} Like
+                </button>
+                <button onClick={() => handleShare(article.url, index)} className="share-button">
+                  <FaShareAlt color="#187" /> {shared === index ? 'Copied!' : 'Share'}
+                </button>
+                <button onClick={(e) => handleReadMore(article, e)} className="read-more-button">
                   Read More
                 </button>
               </div>
