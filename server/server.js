@@ -734,7 +734,12 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
 // Protected API routes
 app.get('/api/news', isAuthenticated, (req, res) => {
   console.log('Session User:', req.session.user);
-  const query = req.query.q || 'bitcoin';
+  
+  let query = req.query.q;
+  if (!query || query.trim() === '') {
+    query = 'bitcoin'; // Default keyword
+  }
+
   const filterBy = req.query.filterBy || null;
   const sortBy = req.query.sortBy || 'relevancy';
 
