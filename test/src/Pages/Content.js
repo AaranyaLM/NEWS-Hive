@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Content.css";
 import Navbar from '../Components/Navbar';
+
 const Content = () => {
   const [article, setArticle] = useState(null);
   const [content, setContent] = useState("");
@@ -8,10 +9,14 @@ const Content = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const storedArticle = sessionStorage.getItem("currentArticle");
+    // First, check if the article exists in sessionStorage, if not, look in localStorage
+    const storedArticle = sessionStorage.getItem("currentArticle") || localStorage.getItem("currentArticle");
     if (storedArticle) {
       setArticle(JSON.parse(storedArticle));
-      sessionStorage.removeItem("currentArticle");
+      sessionStorage.removeItem("currentArticle"); // Remove from sessionStorage if used
+    } else {
+      setError("No article data available.");
+      setLoading(false);
     }
   }, []);
 
@@ -50,44 +55,44 @@ const Content = () => {
   };
 
   if (!article) {
-    return <p className="error">No article data available.</p>;
+    return <p className="error">{error}</p>;
   }
 
   return (
     <>
-    <Navbar/>
-    <div className="content-page">
-      <div className="article-container">
-        <h1 className="article-title">{article.title}</h1>
-        <div className="publisher-info">
-          {getFaviconUrl(article.url) && (
-            <img src={getFaviconUrl(article.url)} alt="Source Logo" className="favicon" />
-          )}
-          <span className="publisher-name">{article.source.name || "Unknown Source"}</span>
-        </div>
-        <div className="time-stamp">{new Date(article.publishedAt).toLocaleString()}</div>
-        {article.urlToImage && <img src={article.urlToImage} alt="Article" className="full-image" />}
+      <Navbar />
+      <div className="content-page">
+        <div className="article-container">
+          <h1 className="article-title">{article.title}</h1>
+          <div className="publisher-info">
+            {getFaviconUrl(article.url) && (
+              <img src={getFaviconUrl(article.url)} alt="Source Logo" className="favicon" />
+            )}
+            <span className="publisher-name">{article.source.name || "Unknown Source"}</span>
+          </div>
+          <div className="time-stamp">{new Date(article.publishedAt).toLocaleString()}</div>
+          {article.urlToImage && <img src={article.urlToImage} alt="Article" className="full-image" />}
 
-        {/* Article Content */}
-        <div className="article-body">
-          {loading ? (
-            <p className="loading">Loading content...</p>
-          ) : error ? (
-            <p className="error">Error: {error}</p>
-          ) : (
-            content.split("\n").map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))
-          )}
-        </div>
+          {/* Article Content */}
+          <div className="article-body">
+            {loading ? (
+              <p className="loading">Loading content...</p>
+            ) : error ? (
+              <p className="error">Error: {error}</p>
+            ) : (
+              content.split("\n").map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))
+            )}
+          </div>
 
-        {/* Visit Source Button */}
-        <a href={article.url} target="_blank" rel="noopener noreferrer" className="visit-source-btn">
-          Visit the Source
-        </a>
+          {/* Visit Source Button */}
+          <a href={article.url} target="_blank" rel="noopener noreferrer" className="visit-source-btn">
+            Visit the Source
+          </a>
+        </div>
       </div>
-    </div></>
-    
+    </>
   );
 };
 

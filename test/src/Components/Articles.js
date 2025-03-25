@@ -4,7 +4,7 @@ import './Articles.css';
 import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt } from 'react-icons/fa';
 
 const Articles = ({ articles }) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [likedArticles, setLikedArticles] = useState({});
   const [shared, setShared] = useState(null);
 
@@ -20,6 +20,7 @@ const Articles = ({ articles }) => {
   const handleReadMore = (article, e) => {
     e.preventDefault();
     sessionStorage.setItem('currentArticle', JSON.stringify(article));
+    localStorage.setItem('currentArticle', JSON.stringify(article));
     const contentUrl = `${window.location.origin}/content`;
     window.open(contentUrl, '_blank');
   };
