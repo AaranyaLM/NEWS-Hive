@@ -70,9 +70,14 @@ const Content = () => {
             )}
             <span className="publisher-name">{article.source.name || "Unknown Source"}</span>
           </div>
+          {/* Visit Source Button */}
+  
           <div className="time-stamp">{new Date(article.publishedAt).toLocaleString()}</div>
+         
           {article.urlToImage && <img src={article.urlToImage} alt="Article" className="full-image" />}
-
+          <a href={article.url} target="_blank" rel="noopener noreferrer" className="visit-source-btn">
+            Visit the Source
+          </a>
           {/* Article Content */}
           <div className="article-body">
             {loading ? (
@@ -86,10 +91,7 @@ const Content = () => {
             )}
           </div>
 
-          {/* Visit Source Button */}
-          <a href={article.url} target="_blank" rel="noopener noreferrer" className="visit-source-btn">
-            Visit the Source
-          </a>
+        
         </div>
       </div>
     </>

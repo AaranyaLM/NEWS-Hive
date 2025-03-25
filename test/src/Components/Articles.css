@@ -72,28 +72,16 @@
   .article-actions button {
     background: none;
     border: none;
-    color: #187
-  }  
-
-  .article-actions a {
-    text-decoration: none;
-    color:#187 ;
-    transition:all 0.2s;
-  }  
-  .article-actions a:hover {
-   color: rgb(31, 191, 167);
-  }  
-
-  .source-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    color: black; /* Default color */
+    cursor: pointer;
   }
   
-  .favicon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
+  .article-actions button:hover {
+    color: #187; /* Color on hover */
+  }
+  
+  .article-actions button:active {
+    color: #187; /* Color when active */
   }
   
   .like-button {
@@ -104,7 +92,10 @@
     cursor: pointer;
     border-radius: 5px;
     transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
+    color: black; /* Default color */
   }
+  
+ 
   
   .like-button.liked {
     background: #1877f2; 
