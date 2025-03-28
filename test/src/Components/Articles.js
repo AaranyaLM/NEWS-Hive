@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Articles.css';
-import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt } from 'react-icons/fa';
+import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt } from 'react-icons/fa';
 
 const Articles = ({ articles }) => {
-  // const navigate = useNavigate();
   const [likedArticles, setLikedArticles] = useState({});
   const [shared, setShared] = useState(null);
 
@@ -39,6 +38,11 @@ const Articles = ({ articles }) => {
     });
   };
 
+  const handleComment = (article) => {
+    console.log('Opening comment section for:', article.title);
+    // TODO: Implement a modal or comment section
+  };
+
   return (
     <div className="articles">
       {articles.length > 0 ? (
@@ -49,9 +53,11 @@ const Articles = ({ articles }) => {
               <div className="article-header">
                 <div className="source-info">
                   {faviconUrl && <img src={faviconUrl} alt="Source Logo" className="favicon" />}
-                  <div className="source">{article.source.name || 'Unknown Source'}</div>
+                  <div className="source-details">
+                    <div className="source">{article.source.name || 'Unknown Source'}</div>
+                    <div className="time">{new Date(article.publishedAt).toLocaleString()}</div>
+                  </div>
                 </div>
-                <div className="time">{new Date(article.publishedAt).toLocaleString()}</div>
               </div>
               <div className="article-content">
                 <h2>{article.title}</h2>
@@ -61,6 +67,9 @@ const Articles = ({ articles }) => {
               <div className="article-actions">
                 <button onClick={() => toggleLike(index)} className="like-button">
                   {likedArticles[index] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#666" />} Like
+                </button>
+                <button onClick={() => handleComment(article)} className="comment-button">
+                  <FaCommentAlt color="#187" /> Comment
                 </button>
                 <button onClick={() => handleShare(article.url, index)} className="share-button">
                   <FaShareAlt color="#187" /> {shared === index ? 'Copied!' : 'Share'}
