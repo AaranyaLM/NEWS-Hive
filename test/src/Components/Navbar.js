@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../Images/Logo.png';
 import './Navbar.css'; 
 
@@ -9,7 +9,6 @@ function Navbar() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Check authentication status when component mounts
         const checkAuthStatus = async () => {
             try {
                 const response = await fetch('http://localhost:5000/api/auth/status', {
@@ -43,7 +42,7 @@ function Navbar() {
             
             if (response.ok) {
                 setUser(null);
-                navigate('/userauth'); // Redirect to login page after logout
+                navigate('/userauth');
             } else {
                 console.error('Logout failed');
             }
@@ -53,29 +52,35 @@ function Navbar() {
     };
 
     return (
-        <div className="navbar">
-            <div className="logo">
-                <Link to="/">
+        <nav className="slim-navbar">
+            <div className="navbar-container">
+                <Link to="/" className="navbar-logo">
                     <img src={Logo} alt="Logo" />
                 </Link>
+                
+                <div className="navbar-links">
+                    <Link to="/">Home</Link>
+                    <Link to="/trending">Trending</Link>
+                </div>
+                
+                <div className="navbar-auth">
+                    {isLoading ? (
+                        <span className="loading-text">Loading...</span>
+                    ) : user ? (
+                        <div className="user-profile">
+                            <span className="username">{user.username}</span>
+                            <button onClick={handleLogout} className="logout-button">
+                                Logout
+                            </button>
+                        </div>
+                    ) : (
+                        <Link to="/userauth" className="login-button">
+                            Login
+                        </Link>
+                    )}
+                </div>
             </div>
-            <div className="navigation">
-                <Link to="/">Home</Link>
-                <Link to="/trending">Trending</Link>
-            </div>
-            <div className="auth-buttons">
-                {isLoading ? (
-                    <button disabled>Loading...</button>
-                ) : user ? (
-                    <div className="user-menu">
-                        <span className="username">{user.username}</span>
-                        <button onClick={handleLogout} className="logout-btn">Logout</button>
-                    </div>
-                ) : (
-                    <button><Link to="/userauth">Login/Sign Up</Link></button>
-                )}
-            </div>
-        </div>
+        </nav>
     );
 }
 
