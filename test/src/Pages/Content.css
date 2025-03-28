@@ -31,8 +31,8 @@
   }
   
   .article-title {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+    font-size: 2.0rem;
+    margin-bottom: 18px;
   }
   
   .publisher-info {
@@ -48,7 +48,7 @@
   }
   
   .publisher-name {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: bold;
     color: #555;
   }
@@ -80,17 +80,17 @@
   .visit-source-btn {
     display: block;
     text-align: center;
-    background-color: #555555;
-    color: white;
+    color: black;
+    text-decoration: underline;
     padding: 10px 20px;
     margin: 20px 300px 20px;
     border-radius: 5px;
-    text-decoration: none;
+
     font-size: 16px;
     font-weight: bold;
   }
   
   .visit-source-btn:hover {
-    background-color: #848484;
+    color: #555;
   }
   
