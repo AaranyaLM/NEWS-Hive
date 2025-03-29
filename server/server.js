@@ -10,6 +10,8 @@ const crypto = require('crypto');
 const app = express();
 const NewsAPI = require('newsapi');
 const newsapi = new NewsAPI('c31a65d1df3d4f49a2b9fb548e99bb0b');
+const mongoose = require('mongoose');
+const Interaction = require('./InteractionModel');
 
 // Database configuration
 const dbConfig = {
@@ -726,6 +728,179 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
       success: false,
       message: 'Server error when resending reset code'
     });
+  }
+});
+
+mongoose.connect('mongodb://localhost:27017/news_hive', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error(err));
+
+// Like an article
+app.post('/api/like', isAuthenticated, async (req, res) => {
+  try {
+    const { articleId } = req.body;
+    const userId = req.session.user.id;
+    
+    const interaction = await Interaction.findOneAndUpdate(
+      { articleId, userId },
+      { liked: true },
+      { upsert: true, new: true }
+    );
+    
+    res.json(interaction);
+  } catch (error) {
+    console.error('Error liking article:', error);
+    res.status(500).json({ error: 'Failed to like article' });
+  }
+});
+
+app.post('/api/user-interactions', isAuthenticated, async (req, res) => {
+  try {
+    const { articleIds } = req.body;
+    const userId = req.session.user.id;
+    
+    console.log('Fetching interactions for user:', userId, 'articles:', articleIds);
+    
+    // Find all interactions for this user and the provided article IDs
+    const interactions = await Interaction.find({
+      userId: userId,
+      articleId: { $in: articleIds }
+    });
+    
+    console.log('Found interactions:', interactions.length);
+    
+    res.json(interactions);
+  } catch (error) {
+    console.error('Error fetching user interactions:', error);
+    res.status(500).json({ error: 'Failed to fetch user interactions' });
+  }
+});
+app.get('/api/comments/:articleId', isAuthenticated, async (req, res) => {
+  try {
+    // Don't decode the URL parameter - match exactly what's in the database
+    const articleId = req.params.articleId;
+    console.log('Raw articleId from request:', articleId);
+    
+    // Get ALL interactions from the database for debugging
+    const allInteractions = await Interaction.find({}).lean();
+    console.log('All articleIds in database:', 
+      allInteractions.map(i => ({ id: i.articleId, hasComments: i.comments?.length > 0 })));
+    
+    // Find interactions for this exact articleId
+    const interactions = await Interaction.find({ articleId }).lean();
+    console.log('Found interactions for articleId:', interactions.length);
+    
+    // Extract all comments
+    let allComments = [];
+    for (const int of interactions) {
+      if (int.comments && int.comments.length > 0) {
+        for (const comment of int.comments) {
+          allComments.push({
+            text: comment.text,
+            timestamp: comment.timestamp,
+            username: comment.username || 'Anonymous User'
+          });
+        }
+      }
+    }
+    
+    // Sort by timestamp
+    allComments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    console.log('Final comments count:', allComments.length);
+    
+    res.json({ comments: allComments });
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ error: 'Failed to fetch comments' });
+  }
+});
+  app.post('/api/comment', isAuthenticated, async (req, res) => {
+    try {
+      const { articleId, text } = req.body;
+      const userId = req.session.user.id;
+      const username = req.session.user.username;
+      
+      const interaction = await Interaction.findOneAndUpdate(
+        { articleId, userId }, // Add userId to the query to get the user's specific interaction
+        { 
+          $push: { 
+            comments: { 
+              text, 
+              timestamp: new Date(), 
+              username 
+            } 
+          } 
+        },
+        { upsert: true, new: true }
+      );
+      
+      res.json(interaction);
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      res.status(500).json({ error: 'Failed to post comment' });
+    }
+  });
+
+  app.get('/api/debug/all-comments', async (req, res) => {
+    try {
+      // Get ALL interactions that have comments
+      const interactions = await Interaction.find({
+        'comments.0': { $exists: true }
+      }).lean();
+      
+      // Create a response with detailed information
+      const debug = {
+        totalInteractionsWithComments: interactions.length,
+        interactionDetails: interactions.map(int => ({
+          _id: int._id,
+          articleId: int.articleId,
+          userId: int.userId,
+          commentCount: int.comments ? int.comments.length : 0,
+          firstCommentText: int.comments && int.comments.length > 0 ? 
+            int.comments[0].text : 'No comments'
+        })),
+        allComments: []
+      };
+      
+      // Extract all comments
+      for (const int of interactions) {
+        if (int.comments && int.comments.length > 0) {
+          for (const comment of int.comments) {
+            debug.allComments.push({
+              interactionId: int._id,
+              articleId: int.articleId,
+              commentText: comment.text,
+              timestamp: comment.timestamp,
+              username: comment.username || 'Unknown'
+            });
+          }
+        }
+      }
+      
+      res.json(debug);
+    } catch (error) {
+      console.error('Error in debug endpoint:', error);
+      res.status(500).json({ error: 'Debug endpoint failed' });
+    }
+  });
+// Track Read More Clicks
+app.post('/api/read-more', isAuthenticated, async (req, res) => {
+  try {
+    const { articleId } = req.body;
+    const userId = req.session.user.id;
+    
+    const interaction = await Interaction.findOneAndUpdate(
+      { articleId, userId },
+      { readMore: true },
+      { upsert: true, new: true }
+    );
+    
+    res.json(interaction);
+  } catch (error) {
+    console.error('Error tracking read more:', error);
+    res.status(500).json({ error: 'Failed to track read more' });
   }
 });
 
