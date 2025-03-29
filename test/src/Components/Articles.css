@@ -184,7 +184,7 @@
 }
 
 .comment-form button {
-  background-color: #187;
+  background-color: rgb(0, 0, 0);
   color: white;
   border: none;
   border-radius: 4px;
@@ -235,4 +235,28 @@
   margin: 0;
   font-size: 16px;
   line-height: 1.4;
+}
+
+/* Like button animation */
+@keyframes likeAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.like-button.liked svg {
+  animation: likeAnimation 0.2s ease-in-out;
+  color: #187;
+  fill: #187;
+}
+
+/* Remove hover background color but keep the clickable feel */
+.article-actions button:hover {
+  opacity: 0.8;
 }

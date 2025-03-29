@@ -99,32 +99,42 @@ const checkAllComments = async () => {
     console.error('Error checking all comments:', error);
   }
 };
-  const toggleLike = async (article) => {
-    if (!currentUser) return;
-    
-    const articleId = generateArticleId(article);
-    // Update UI immediately for responsive feel
+const toggleLike = async (article) => {
+  if (!currentUser) return;
+  
+  const articleId = generateArticleId(article);
+  
+  // Apply animation class temporarily
+  const likeButtonElement = document.querySelector(`[data-article-id="${articleId}"]`);
+  if (likeButtonElement) {
+    likeButtonElement.classList.add('liked');
+    setTimeout(() => {
+      likeButtonElement.classList.remove('liked');
+    }, 400); // Match animation duration
+  }
+  
+  // Update UI immediately for responsive feel
+  setLikedArticles((prev) => ({
+    ...prev,
+    [articleId]: !prev[articleId],
+  }));
+
+  try {
+    await fetch('http://localhost:5000/api/like', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Include cookies for authentication
+      body: JSON.stringify({ articleId }),
+    });
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    // Revert the UI change if the server request fails
     setLikedArticles((prev) => ({
       ...prev,
       [articleId]: !prev[articleId],
     }));
-
-    try {
-      await fetch('http://localhost:5000/api/like', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({ articleId }),
-      });
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      // Revert the UI change if the server request fails
-      setLikedArticles((prev) => ({
-        ...prev,
-        [articleId]: !prev[articleId],
-      }));
-    }
-  };
+  }
+};
 
   const openCommentSidebar = (article) => {
     setCurrentArticle(article);
@@ -263,14 +273,18 @@ const checkAllComments = async () => {
                   <p>{article.description}</p>
                 </div>
                 <div className="article-actions">
-                  <button onClick={() => toggleLike(article)} className="like-button">
-                    {likedArticles[articleId] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#666" />} Like
-                  </button>
+                <button 
+  onClick={() => toggleLike(article)} 
+  className="like-button"
+  data-article-id={articleId}
+>
+  {likedArticles[articleId] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#000" />} Like
+</button>
                   <button onClick={() => openCommentSidebar(article)} className="comment-button">
-                    <FaCommentAlt color="#187" /> Comments
+                    <FaCommentAlt color="#000" /> Comments
                   </button>
                   <button onClick={() => handleShare(article)} className="share-button">
-                    <FaShareAlt color="#187" /> {shared === articleId ? 'Copied!' : 'Share'}
+                    <FaShareAlt color="#000" /> {shared === articleId ? 'Copied!' : 'Share'}
                   </button>
                   <button onClick={(e) => handleReadMore(article, e)} className="read-more-button">
                     Read More
