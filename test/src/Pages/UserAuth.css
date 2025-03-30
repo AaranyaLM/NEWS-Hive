@@ -245,34 +245,134 @@
     }
 }
 
+/* Updated Mobile Responsive Styles */
 @media (max-width: 768px) {
     .content {
         width: 90vw;
         min-height: 480px;
+        flex-direction: column;
+        position: relative;
     }
     
+    /* Change how the switch content works on mobile */
     .switch-content {
-        display: none;
+        position: relative;
+        display: flex;
+        width: 100%;
+        height: auto;
+        right: 0;
+        border-radius: 0;
+        margin-top: 20px;
+        order: 3; /* Place at bottom */
     }
     
     .col-md-6 {
         width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition: transform 0.6s ease-in-out, opacity 0.3s ease-in-out;
+        opacity: 0;
+        transform: translateX(100%);
+        padding: 40px 20px;
     }
     
+    /* Login Form */
     .right-box {
-        display: none;
+        opacity: 1;
+        transform: translateX(0);
+        position: relative;
+        z-index: 1;
     }
     
-    .content.active .right-box {
-        display: none;
-    }
-    
+    /* Register Form */
     .content:not(.active) .col-md-6:first-child {
-        display: none;
+        display: flex;
+        opacity: 0;
+        transform: translateX(100%);
+        z-index: 0;
     }
     
     .content.active .col-md-6:first-child {
         display: flex;
+        opacity: 1;
+        transform: translateX(0);
+        z-index: 2;
+    }
+    
+    .content.active .right-box {
+        opacity: 0;
+        transform: translateX(-100%);
+        z-index: 0;
+    }
+    
+    /* Mobile switch panel styling */
+    .switch {
+        background-color: #000;
+        left: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        height: auto;
+        padding: 15px 0;
+        border-radius: 0 0 40px 40px;
+    }
+    
+    .switch-panel {
+        position: relative;
+        width: 50%;
+        height: auto;
+        padding: 10px;
+    }
+    
+    .switch-panel h1 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    .switch-panel p {
+        font-size: 12px;
+        margin-bottom: 10px;
+        display: none; /* Hide on mobile to save space */
+    }
+    
+    .switch-panel .logo {
+        width: 100px;
+        margin-bottom: 5px;
+        display: none; /* Hide on mobile to save space */
+    }
+    
+    .switch-panel button {
+        padding: 8px 15px;
+        font-size: 14px;
+        margin-top: 0;
+    }
+    
+    /* Tabs for mobile navigation */
+    .mobile-tabs {
+        display: flex;
+        width: 100%;
+        background-color: #000;
+        border-radius: 40px 40px 0 0;
+    }
+    
+    .mobile-tab {
+        flex: 1;
+        text-align: center;
+        padding: 15px;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .mobile-tab.active {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Form adjustments for smaller screens */
+    form {
+        width: 100%;
+        max-width: 300px;
     }
 }
 
@@ -296,7 +396,7 @@ form {
 .btn-link {
     background: none;
     border: none;
-    color: #ffffff;
+    color: #007bff;
     padding: 5px;
     text-decoration: underline;
     cursor: pointer;
@@ -306,8 +406,33 @@ form {
 }
 
 .btn-link:hover {
-    color: #ffffff;
+    color: #0056b3;
     background: none;
     text-decoration: none;
     transform: none;
+}
+
+/* Specific color fix for mobile */
+@media (max-width: 768px) {
+    .btn-link {
+        color: #007bff;
+    }
+    
+    /* Add mobile toggle buttons at the bottom */
+    .mobile-switch-buttons {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    
+    .mobile-switch-button {
+        background-color: #000;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 0 5px;
+        border-radius: 5px;
+        font-weight: 600;
+    }
 }

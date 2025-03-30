@@ -254,6 +254,9 @@ function UserAuth() {
         }
     };
 
+    // Check if the screen is mobile size
+    const isMobileSize = window.innerWidth <= 768;
+
     return (
         <div id="user-auth-container">
             <div id="blur-overlay"></div>
@@ -310,6 +313,13 @@ function UserAuth() {
                                     {isLoading ? 'Registering...' : 'Register'}
                                 </button>
                             </div>
+                            
+                            {/* Mobile-only login link */}
+                            {isMobileSize && (
+                                <div className="text-center mt-3">
+                                    <p>Already have an account? <button type="button" className="btn-link" onClick={switchToLogin}>Login</button></p>
+                                </div>
+                            )}
                         </form>
                     ) : (
                         <form onSubmit={handleVerificationSubmit}>
@@ -343,7 +353,7 @@ function UserAuth() {
                             <div className='d-flex justify-content-center'>
                                 <button 
                                     type="button" 
-                                    className='btn btn-link'
+                                    className='btn-link'
                                     onClick={handleResendCode}
                                     disabled={isLoading}
                                 >
@@ -353,7 +363,7 @@ function UserAuth() {
                             <div className='d-flex justify-content-center mt-2'>
                                 <button 
                                     type="button" 
-                                    className='btn btn-link'
+                                    className='btn-link'
                                     onClick={switchToLogin}
                                 >
                                     Back to login
@@ -394,10 +404,10 @@ function UserAuth() {
                             />
                         </div>
                         <div className='input-group mb-5 d-flex justify-content-between'>
-    <div className='forgot'>
-        <small><a href='/forgot'>Forgot Password?</a></small>
-    </div>
-</div>
+                            <div className='forgot'>
+                                <small><a href='/forgot'>Forgot Password?</a></small>
+                            </div>
+                        </div>
                         <div className='input-group mb-3 justify-content-center'>
                             <button 
                                 type="submit" 
@@ -407,10 +417,17 @@ function UserAuth() {
                                 {isLoading ? 'Logging in...' : 'Login'}
                             </button>
                         </div>
+                        
+                        {/* Mobile-only register link */}
+                        {isMobileSize && (
+                            <div className="text-center mt-3">
+                                <p>Don't have an account? <button type="button" className="btn-link" onClick={switchToRegister}>Register</button></p>
+                            </div>
+                        )}
                     </form> 
                 </div>
 
-                {/* Switch Panel */}
+                {/* Switch Panel - Remains for desktop, but redesigned for mobile */}
                 <div className='switch-content'>
                     <div className='switch'>
                         <div className='switch-panel switch-left'>
@@ -427,6 +444,9 @@ function UserAuth() {
                         </div>
                     </div>
                 </div>
+                
+              
+                
             </div>
         </div>
     );

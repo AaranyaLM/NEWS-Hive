@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserAuth.css';
-import logo from '../Images/WhiteLogo.png';
+import logo from '../Images/Logo.png';
 
 function ForgotPassword() {
     const [isLoading, setIsLoading] = useState(false);
@@ -372,10 +372,10 @@ function ForgotPassword() {
                 
                 {/* Right side with logo */}
                 <div className="col-md-6 right-box">
-                    <div className="d-flex flex-column align-items-center justify-content-center h-100" style={{backgroundColor: '#000', height: '100%', borderRadius: '0 40px 40px 0', padding: '40px'}}>
+                    <div className="d-flex flex-column align-items-center justify-content-center h-100" style={{backgroundColor: '#fff', height: '100%', borderRadius: '0 40px 40px 0', padding: '40px'}}>
                         <img src={logo} alt="News Hive Logo" className="logo mb-4" />
-                        <h1 className="text-white">Reset Your Password</h1>
-                        <p className="text-white text-center">We'll help you get back into your account</p>
+                        <h1 className="text-black">Reset Your Password</h1>
+                        <p className="text-black text-center"></p>
                     </div>
                 </div>
 
