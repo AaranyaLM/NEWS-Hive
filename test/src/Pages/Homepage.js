@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Searchbar from '../Components/Searchbar';
 import ArticleFeed from '../Components/ArticleFeed';
 import Navbar from '../Components/Navbar';
-import './Homepage.css';
 
 const Homepage = () => {
   const [searchQuery, setSearchQuery] = useState('bitcoin');

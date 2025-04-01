@@ -743,16 +743,22 @@ app.post('/api/like', isAuthenticated, async (req, res) => {
     const { articleId } = req.body;
     const userId = req.session.user.id;
     
+    // Find the existing interaction
+    const existingInteraction = await Interaction.findOne({ articleId, userId });
+    
+    // Toggle the liked state - if it exists and is liked, set to false; otherwise set to true
+    const newLikedState = existingInteraction ? !existingInteraction.liked : true;
+    
     const interaction = await Interaction.findOneAndUpdate(
       { articleId, userId },
-      { liked: true },
+      { liked: newLikedState },
       { upsert: true, new: true }
     );
     
     res.json(interaction);
   } catch (error) {
-    console.error('Error liking article:', error);
-    res.status(500).json({ error: 'Failed to like article' });
+    console.error('Error toggling like status:', error);
+    res.status(500).json({ error: 'Failed to update like status' });
   }
 });
 
