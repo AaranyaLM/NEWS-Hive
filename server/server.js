@@ -730,6 +730,50 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
     });
   }
 });
+app.get('/api/user/profile', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    // Fetch user details from database
+    const [users] = await pool.query(
+      'SELECT id, username, email, created_at FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Format the created_at date
+    const createdAt = new Date(user.created_at).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        createdAt: createdAt,
+        bio: 'This user has not added a bio yet.' // Placeholder, you can add this field to your database later
+      }
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching profile'
+    });
+  }
+});
 
 mongoose.connect('mongodb://localhost:27017/news_hive', {
   useNewUrlParser: true,
@@ -909,8 +953,26 @@ app.post('/api/read-more', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to track read more' });
   }
 });
-
-
+//Share API endpoint
+app.post('/api/share', isAuthenticated, async (req, res) => {
+  try {
+    const { articleId } = req.body;
+    const userId = req.session.user.id;
+    
+    // Find the existing interaction or create a new one
+    const interaction = await Interaction.findOneAndUpdate(
+      { articleId, userId },
+      // Increment the shares field by 1
+      { $inc: { shares: 1 } },
+      { upsert: true, new: true }
+    );
+    
+    res.json(interaction);
+  } catch (error) {
+    console.error('Error updating share count:', error);
+    res.status(500).json({ error: 'Failed to update share count' });
+  }
+});
 // For the feeds
 // Protected API routes
 app.get('/api/news', isAuthenticated, (req, res) => {

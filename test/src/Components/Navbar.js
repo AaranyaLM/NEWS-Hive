@@ -67,12 +67,13 @@ function Navbar() {
                     {isLoading ? (
                         <span className="loading-text">Loading...</span>
                     ) : user ? (
-                        <div className="user-profile">
-                            <span className="username">{user.username}</span>
-                            <button onClick={handleLogout} className="logout-button">
-                                Logout
-                            </button>
-                        </div>
+                     
+<div className="user-profile">
+    <Link to="/profile" className="username">{user.username}</Link>
+    <button onClick={handleLogout} className="logout-button">
+        Logout
+    </button>
+</div>
                     ) : (
                         <Link to="/userauth" className="login-button">
                             Login

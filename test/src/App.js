@@ -6,6 +6,7 @@ import Content from './Pages/Content';
 import UserAuth from './Pages/UserAuth';
 import ForgotPassword from './Pages/ForgotPassword'; 
 import ProtectedRoute from './Components/ProtectedRoute';
+import Profile from './Pages/Profilepage';
 
 function App() {
   return (
@@ -28,7 +29,13 @@ function App() {
             <Content />
           </ProtectedRoute>
         } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
       </Routes>
+      
     </Router>
   );
 }
