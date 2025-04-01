@@ -10,6 +10,7 @@ function Profile() {
         likes: 0,
         comments: 0
     });
+    const [activeTab, setActiveTab] = useState('saved');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -43,6 +44,53 @@ function Profile() {
         }
     };
 
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+    };
+
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'saved':
+                return (
+                    <div className="content-grid">
+                        {[1, 2, 3, 4, 5, 6].map((item) => (
+                            <div key={item} className="grid-item">
+                                <div className="article-thumbnail">
+                                    <div className="placeholder-thumbnail">Saved Article {item}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            case 'liked':
+                return (
+                    <div className="content-grid">
+                        {[1, 2, 3, 4].map((item) => (
+                            <div key={item} className="grid-item">
+                                <div className="article-thumbnail">
+                                    <div className="placeholder-thumbnail">Liked Article {item}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            case 'comments':
+                return (
+                    <div className="comments-list">
+                        {[1, 2, 3, 4, 5].map((item) => (
+                            <div key={item} className="comment-item">
+                                <h3>Comment on Article {item}</h3>
+                                <p>This is a sample comment that the user made on an article.</p>
+                                <span className="comment-date">April 1, 2025</span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
     if (isLoading) {
         return <div className="loading-spinner">Loading...</div>;
     }
@@ -50,11 +98,6 @@ function Profile() {
     return (
         <div className="instagram-profile-container">
             <div className="profile-header">
-                {/* <div className="profile-picture">
-                    <div className="avatar-circle">
-                        {user?.username?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                </div> */}
                 <div className="profile-info">
                     <h1 className="profile-username">{user?.username}</h1>
                     <div className="user-stats">
@@ -81,20 +124,27 @@ function Profile() {
             </div>
             
             <div className="content-tabs">
-                <div className="tab active">SAVED</div>
-                <div className="tab">LIKED</div>
-                <div className="tab">COMMENTS</div>
+                <div 
+                    className={`tab ${activeTab === 'saved' ? 'active' : ''}`}
+                    onClick={() => handleTabChange('saved')}
+                >
+                    SAVED
+                </div>
+                <div 
+                    className={`tab ${activeTab === 'liked' ? 'active' : ''}`}
+                    onClick={() => handleTabChange('liked')}
+                >
+                    LIKED
+                </div>
+                <div 
+                    className={`tab ${activeTab === 'comments' ? 'active' : ''}`}
+                    onClick={() => handleTabChange('comments')}
+                >
+                    COMMENTS
+                </div>
             </div>
             
-            <div className="content-grid">
-                {[1, 2, 3, 4, 5, 6].map((item) => (
-                    <div key={item} className="grid-item">
-                        <div className="article-thumbnail">
-                            <div className="placeholder-thumbnail">Article {item}</div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {renderTabContent()}
         </div>
     );
 }
