@@ -114,7 +114,12 @@ function Profile() {
                             <span className="stat-label">comments</span>
                         </div>
                     </div>
-                    <button className="edit-profile-btn">Edit Profile</button>
+                    <button 
+    className="edit-profile-btn"
+    onClick={() => navigate('/edit-profile')}
+>
+    Edit Profile
+</button>
                 </div>
             </div>
             

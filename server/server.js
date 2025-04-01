@@ -775,6 +775,212 @@ app.get('/api/user/profile', isAuthenticated, async (req, res) => {
   }
 });
 
+// Update user profile
+app.post('/api/user/update-profile', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { username, bio } = req.body;
+    
+    // Start building the update query and parameters
+    let updateFields = [];
+    let updateParams = [];
+    
+    // Only include bio in update if it's provided
+    if (bio !== undefined) {
+      updateFields.push('bio = ?');
+      updateParams.push(bio);
+    }
+    
+    // Handle username update with restrictions
+    if (username !== undefined) {
+      // Check if username is different from current username
+      const [currentUser] = await pool.query(
+        'SELECT username, last_username_change FROM users WHERE id = ?',
+        [userId]
+      );
+      
+      if (currentUser[0].username !== username) {
+        // Check if the username already exists
+        const [existingUsers] = await pool.query(
+          'SELECT id FROM users WHERE username = ? AND id != ?',
+          [username, userId]
+        );
+        
+        if (existingUsers.length > 0) {
+          return res.status(409).json({
+            success: false,
+            message: 'Username already taken'
+          });
+        }
+        
+        // Check 7-day restriction
+        if (currentUser[0].last_username_change) {
+          const lastChange = new Date(currentUser[0].last_username_change);
+          const now = new Date();
+          const daysSinceLastChange = Math.floor((now - lastChange) / (1000 * 60 * 60 * 24));
+          
+          if (daysSinceLastChange < 7) {
+            return res.status(403).json({
+              success: false,
+              message: 'You can only change your username once every 7 days'
+            });
+          }
+        }
+        
+        // Add username to update fields
+        updateFields.push('username = ?');
+        updateParams.push(username);
+        
+        // Update last_username_change date
+        updateFields.push('last_username_change = NOW()');
+      }
+    }
+    
+    // If nothing to update
+    if (updateFields.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No changes to save'
+      });
+    }
+    
+    // Perform the update
+    updateParams.push(userId);
+    await pool.query(
+      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
+      updateParams
+    );
+    
+    // Update session data if username was changed
+    if (username !== undefined && req.session.user.username !== username) {
+      req.session.user.username = username;
+    }
+    
+    res.json({
+      success: true,
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating profile'
+    });
+  }
+});
+
+// Change password
+app.post('/api/user/change-password', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { currentPassword, newPassword } = req.body;
+    
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+    
+    // Get current user data
+    const [users] = await pool.query(
+      'SELECT password_hash FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Verify current password
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+    
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    
+    // Update password
+    await pool.query(
+      'UPDATE users SET password_hash = ? WHERE id = ?',
+      [hashedPassword, userId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while changing password'
+    });
+  }
+});
+
+// Update the profile endpoint to include the last_username_change field
+app.get('/api/user/profile', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    // Fetch user details from database
+    const [users] = await pool.query(
+      'SELECT id, username, email, created_at, bio, last_username_change FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = users[0];
+    
+    // Format the created_at date
+    const createdAt = new Date(user.created_at).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        createdAt: createdAt,
+        bio: user.bio || '',
+        lastUsernameChange: user.last_username_change
+      }
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching profile'
+    });
+  }
+});
+
+
+
+// User interactions
 mongoose.connect('mongodb://localhost:27017/news_hive', {
   useNewUrlParser: true,
   useUnifiedTopology: true,

@@ -7,6 +7,7 @@ import UserAuth from './Pages/UserAuth';
 import ForgotPassword from './Pages/ForgotPassword'; 
 import ProtectedRoute from './Components/ProtectedRoute';
 import Profile from './Pages/Profilepage';
+import EditProfilepage from './Pages/EditProfilepage';
 
 function App() {
   return (
@@ -34,8 +35,12 @@ function App() {
             <Profile />
           </ProtectedRoute>
         } />
+        <Route path="/edit-profile" element={
+          <ProtectedRoute>
+            <EditProfilepage />
+          </ProtectedRoute>
+        } />
       </Routes>
-      
     </Router>
   );
 }
