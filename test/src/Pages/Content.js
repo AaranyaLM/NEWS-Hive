@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Content.css";
 import Navbar from '../Components/Navbar';
+import Footer from '../Components/Footer';
 
 const Content = () => {
   const [article, setArticle] = useState(null);
@@ -94,6 +95,7 @@ const Content = () => {
         
         </div>
       </div>
+      <Footer></Footer>
     </>
   );
 };

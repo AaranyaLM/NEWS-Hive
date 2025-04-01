@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Searchbar from '../Components/Searchbar';
 import ArticleFeed from '../Components/ArticleFeed';
 import Navbar from '../Components/Navbar';
+import Footer from '../Components/Footer';
 
 const Homepage = () => {
   const [searchQuery, setSearchQuery] = useState('bitcoin');
@@ -25,6 +26,7 @@ const Homepage = () => {
           sort={sortBy}
         />
       </div>
+      <Footer></Footer>
     </>
   );
 };
