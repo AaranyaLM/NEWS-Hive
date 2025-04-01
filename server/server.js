@@ -736,7 +736,7 @@ app.get('/api/user/profile', isAuthenticated, async (req, res) => {
     
     // Fetch user details from database
     const [users] = await pool.query(
-      'SELECT id, username, email, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, created_at, bio, last_username_change FROM users WHERE id = ?',
       [userId]
     );
     
@@ -763,7 +763,8 @@ app.get('/api/user/profile', isAuthenticated, async (req, res) => {
         username: user.username,
         email: user.email,
         createdAt: createdAt,
-        bio: 'This user has not added a bio yet.' // Placeholder, you can add this field to your database later
+        bio: user.bio || '',
+        lastUsernameChange: user.last_username_change
       }
     });
   } catch (error) {
@@ -931,52 +932,7 @@ app.post('/api/user/change-password', isAuthenticated, async (req, res) => {
   }
 });
 
-// Update the profile endpoint to include the last_username_change field
-app.get('/api/user/profile', isAuthenticated, async (req, res) => {
-  try {
-    const userId = req.session.user.id;
-    
-    // Fetch user details from database
-    const [users] = await pool.query(
-      'SELECT id, username, email, created_at, bio, last_username_change FROM users WHERE id = ?',
-      [userId]
-    );
-    
-    if (users.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-    
-    const user = users[0];
-    
-    // Format the created_at date
-    const createdAt = new Date(user.created_at).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        createdAt: createdAt,
-        bio: user.bio || '',
-        lastUsernameChange: user.last_username_change
-      }
-    });
-  } catch (error) {
-    console.error('Profile fetch error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching profile'
-    });
-  }
-});
+
 
 
 
