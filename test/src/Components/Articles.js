@@ -12,6 +12,8 @@ const Articles = ({ articles }) => {
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loadingLikes, setLoadingLikes] = useState(true);
+  // State for tracking floating like button animations
+  const [floatingLikes, setFloatingLikes] = useState({});
 
   const generateArticleId = (article) => {
     // Log to confirm encoding is identical to what's in the database
@@ -135,6 +137,36 @@ const toggleLike = async (article) => {
     }));
   }
 };
+
+  // Handle double-click on image to like with floating animation
+  const handleImageDoubleClick = (article, event) => {
+    if (!currentUser) return;
+    
+    const articleId = generateArticleId(article);
+    
+    // Create floating like button animation
+    // Get position where the user clicked
+    const rect = event.target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    // Show floating like animation
+    setFloatingLikes(prev => ({
+      ...prev,
+      [articleId]: { x, y, show: true }
+    }));
+    
+    // Hide after animation completes
+    setTimeout(() => {
+      setFloatingLikes(prev => ({
+        ...prev,
+        [articleId]: { ...prev[articleId], show: false }
+      }));
+    }, 1000);
+    
+    // Also trigger the actual like
+    toggleLike(article);
+  };
 
   const openCommentSidebar = (article) => {
     setCurrentArticle(article);
@@ -269,17 +301,44 @@ const toggleLike = async (article) => {
                 </div>
                 <div className="article-content">
                   <h2>{article.title}</h2>
-                  {article.urlToImage && <img src={article.urlToImage} alt={article.title} />}
+                  <div style={{ position: 'relative' }}>
+                    {article.urlToImage && (
+                      <>
+                        <img 
+                          src={article.urlToImage} 
+                          alt={article.title} 
+                          onDoubleClick={(e) => handleImageDoubleClick(article, e)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        {floatingLikes[articleId]?.show && (
+                          <div 
+                            className="floating-like-button"
+                            style={{
+                              position: 'absolute',
+                              left: `${floatingLikes[articleId].x}px`,
+                              top: `${floatingLikes[articleId].y}px`,
+                              transform: 'translate(-50%, -50%)',
+                              animation: 'floatUp 1s forwards',
+                              opacity: 1,
+                              zIndex: 10
+                            }}
+                          >
+                            <FaThumbsUpSolid color="#187" size={32} />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                   <p>{article.description}</p>
                 </div>
                 <div className="article-actions">
                 <button 
-  onClick={() => toggleLike(article)} 
-  className="like-button"
-  data-article-id={articleId}
->
-  {likedArticles[articleId] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#000" />} Like
-</button>
+                  onClick={() => toggleLike(article)} 
+                  className="like-button"
+                  data-article-id={articleId}
+                >
+                  {likedArticles[articleId] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#000" />} Like
+                </button>
                   <button onClick={() => openCommentSidebar(article)} className="comment-button">
                     <FaCommentAlt color="#000" /> Comments
                   </button>
@@ -300,50 +359,51 @@ const toggleLike = async (article) => {
 
       {/* Comment Sidebar */}
       {showCommentSidebar && (
-  <div className="comment-sidebar">
-    <div className="sidebar-header">
-      <h3>Comments</h3>
-      
-      <button className="close-button" onClick={closeCommentSidebar}>
-        <FaTimes />
-      </button>
-    </div>
-    {/* Display article title */}
-{currentArticle && (
-  <div className="article-title">
-    <h4>{currentArticle.title}</h4>
-  </div>
-)}
-    <div className="comment-form">
-      <textarea
-        placeholder="Add a comment..."
-        value={commentText}
-        onChange={(e) => setCommentText(e.target.value)}
-      />
-      <button onClick={handleSubmitComment}>Post</button>
-    </div>
-    <div className="comments-list">
-      {loading ? (
-        <p>Loading comments...</p>
-      ) : comments.length > 0 ? (
-        comments.map((comment, index) => (
-          <div key={index} className="comment-item">
-            <div className="comment-user">{comment.username || currentUser?.username || 'User'}</div>
-            <div className="comment-text">{comment.text}</div>
-            <div className="comment-time">
-              {new Date(comment.timestamp).toLocaleString()}
-            </div>
+        <div className="comment-sidebar">
+          <div className="sidebar-header">
+            <h3>Comments</h3>
+            
+            <button className="close-button" onClick={closeCommentSidebar}>
+              <FaTimes />
+            </button>
           </div>
-        ))
-      ) : (
-        <p>No comments yet. Be the first to comment!</p>
+          {/* Display article title */}
+          {currentArticle && (
+            <div className="article-title">
+              <h4>{currentArticle.title}</h4>
+            </div>
+          )}
+          <div className="comment-form">
+            <textarea
+              placeholder="Add a comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            />
+            <button onClick={handleSubmitComment}>Post</button>
+          </div>
+          <div className="comments-list">
+            {loading ? (
+              <p>Loading comments...</p>
+            ) : comments.length > 0 ? (
+              comments.map((comment, index) => (
+                <div key={index} className="comment-item">
+                  <div className="comment-user">{comment.username || currentUser?.username || 'User'}</div>
+                  <div className="comment-text">{comment.text}</div>
+                  <div className="comment-time">
+                    {new Date(comment.timestamp).toLocaleString()}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>No comments yet. Be the first to comment!</p>
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 };
+
+
 
 export default Articles;

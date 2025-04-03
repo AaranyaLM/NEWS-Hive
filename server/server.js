@@ -777,7 +777,6 @@ app.get('/api/user/profile', isAuthenticated, async (req, res) => {
 });
 
 // Update user profile
-// Update user profile
 app.post('/api/user/update-profile', isAuthenticated, async (req, res) => {
   try {
     const userId = req.session.user.id;
