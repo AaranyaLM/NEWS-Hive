@@ -777,6 +777,7 @@ app.get('/api/user/profile', isAuthenticated, async (req, res) => {
 });
 
 // Update user profile
+// Update user profile
 app.post('/api/user/update-profile', isAuthenticated, async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -785,6 +786,8 @@ app.post('/api/user/update-profile', isAuthenticated, async (req, res) => {
     // Start building the update query and parameters
     let updateFields = [];
     let updateParams = [];
+    let usernameChanged = false;
+    let oldUsername = '';
     
     // Only include bio in update if it's provided
     if (bio !== undefined) {
@@ -800,7 +803,11 @@ app.post('/api/user/update-profile', isAuthenticated, async (req, res) => {
         [userId]
       );
       
+      oldUsername = currentUser[0].username;
+      
       if (currentUser[0].username !== username) {
+        usernameChanged = true;
+        
         // Check if the username already exists
         const [existingUsers] = await pool.query(
           'SELECT id FROM users WHERE username = ? AND id != ?',
@@ -853,8 +860,11 @@ app.post('/api/user/update-profile', isAuthenticated, async (req, res) => {
     );
     
     // Update session data if username was changed
-    if (username !== undefined && req.session.user.username !== username) {
+    if (usernameChanged) {
       req.session.user.username = username;
+      
+      // Update all comments in MongoDB with the new username
+      await updateUsernameInComments(userId.toString(), oldUsername, username);
     }
     
     res.json({
@@ -869,6 +879,42 @@ app.post('/api/user/update-profile', isAuthenticated, async (req, res) => {
     });
   }
 });
+
+// Function to update username in all comments
+async function updateUsernameInComments(userId, oldUsername, newUsername) {
+  try {
+    // Find all interactions by this user that have comments
+    const userInteractions = await Interaction.find({ 
+      userId: userId,
+      'comments.0': { $exists: true } // Has at least one comment
+    });
+    
+    console.log(`Updating username from ${oldUsername} to ${newUsername} for user ${userId} in ${userInteractions.length} interactions`);
+    
+    // Update the username in all comments for this user's interactions
+    for (const interaction of userInteractions) {
+      // Update each comment that has the old username
+      for (let i = 0; i < interaction.comments.length; i++) {
+        if (interaction.comments[i].username === oldUsername) {
+          interaction.comments[i].username = newUsername;
+        }
+      }
+      await interaction.save();
+    }
+    
+    // Also update comments made by this user on other articles
+    await Interaction.updateMany(
+      { 'comments.username': oldUsername },
+      { $set: { 'comments.$[elem].username': newUsername } },
+      { arrayFilters: [{ 'elem.username': oldUsername }] }
+    );
+    
+    console.log('Username updated in all comments successfully');
+  } catch (error) {
+    console.error('Error updating username in comments:', error);
+    throw error;
+  }
+}
 
 // Change password
 app.post('/api/user/change-password', isAuthenticated, async (req, res) => {
