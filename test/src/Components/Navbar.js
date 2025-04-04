@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 import Logo from '../Images/Logo.png';
 import './Navbar.css'; 
 
@@ -7,7 +7,8 @@ function Navbar() {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
-
+    const location = useLocation(); // Add this to determine active route
+    
     useEffect(() => {
         const checkAuthStatus = async () => {
             try {
@@ -51,6 +52,11 @@ function Navbar() {
         }
     };
 
+    // Helper function to determine if a link is active
+    const isActive = (path) => {
+        return location.pathname === path ? 'active' : '';
+    };
+
     return (
         <nav className="slim-navbar">
             <div className="navbar-container">
@@ -59,8 +65,8 @@ function Navbar() {
                 </Link>
                 
                 <div className="navbar-links">
-                    <Link to="/">Home</Link>
-                    <Link to="/trending">Trending</Link>
+                    <Link to="/" className={isActive('/')}>Home</Link>
+                    <Link to="/trending" className={isActive('/trending')}>Trending</Link>
                 </div>
                 
                 <div className="navbar-auth">
@@ -69,7 +75,7 @@ function Navbar() {
                     ) : user ? (
                         <div className="user-profile">
                             <div className="user-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>

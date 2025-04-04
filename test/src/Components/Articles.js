@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Articles.css';
-import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes } from 'react-icons/fa';
+import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes,FaPaperPlane  } from 'react-icons/fa';
 
 const Articles = ({ articles }) => {
   const [likedArticles, setLikedArticles] = useState({});
@@ -373,14 +373,7 @@ const toggleLike = async (article) => {
               <h4>{currentArticle.title}</h4>
             </div>
           )}
-          <div className="comment-form">
-            <textarea
-              placeholder="Add a comment..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-            />
-            <button onClick={handleSubmitComment}>Post</button>
-          </div>
+          
           <div className="comments-list">
             {loading ? (
               <p>Loading comments...</p>
@@ -397,6 +390,14 @@ const toggleLike = async (article) => {
             ) : (
               <p>No comments yet. Be the first to comment!</p>
             )}
+          </div>
+          <div className="comment-form">
+            <textarea
+              placeholder="Add a comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            />
+            <button onClick={handleSubmitComment}>  <FaPaperPlane /></button>
           </div>
         </div>
       )}
