@@ -33,16 +33,16 @@ const sessionStore = new MySQLStore({
 
 // Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Or any other email service
+  service: 'gmail', 
   auth: {
-    user: 'aaranyalalmaskey@gmail.com', // Your email address
-    pass: 'dhpw igla rzzj nhkg' // Your app password (not your regular password)
+    user: 'aaranyalalmaskey@gmail.com', 
+    pass: 'dhpw igla rzzj nhkg'
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Your React app's origin
+  origin: 'http://localhost:3000', 
   credentials: true // Allow cookies to be sent with requests
 }));
 app.use(bodyParser.json());
@@ -1142,6 +1142,98 @@ app.get('/api/comments/:articleId', isAuthenticated, async (req, res) => {
       res.status(500).json({ error: 'Debug endpoint failed' });
     }
   });
+//user profile comments
+app.get('/api/user/comments', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    // Find all interactions that have comments from this user
+    const interactions = await Interaction.find({
+      userId: userId,
+      'comments.0': { $exists: true } // Only get interactions with at least one comment
+    }).lean();
+    
+    // Create an array of articleIds to fetch their data
+    const articleIds = interactions.map(int => int.articleId);
+    
+    // Create a lookup object for article data
+    const articleDataMap = {};
+    
+    // For each articleId, retrieve or create the necessary article data
+    for (const articleId of articleIds) {
+      try {
+        // Try to find stored article data
+        const articleInfo = await ArticleInfo.findOne({ articleId }).lean();
+        
+        if (articleInfo) {
+          // Use stored data
+          articleDataMap[articleId] = {
+            title: articleInfo.title,
+            url: articleInfo.url || articleId,
+            source: { name: articleInfo.source || 'Unknown Source' },
+            publishedAt: articleInfo.publishedAt || new Date().toISOString(),
+            urlToImage: articleInfo.imageUrl
+          };
+        } else {
+          // If we don't have it stored, create minimal article data
+          // The articleId should be the URL for NewsAPI articles
+          articleDataMap[articleId] = {
+            title: 'News Article',
+            url: articleId,
+            source: { name: 'External Source' },
+            publishedAt: new Date().toISOString()
+          };
+        }
+      } catch (err) {
+        console.error(`Error fetching data for article ${articleId}:`, err);
+        // Create fallback data
+        articleDataMap[articleId] = {
+          title: 'News Article',
+          url: articleId,
+          source: { name: 'External Source' },
+          publishedAt: new Date().toISOString()
+        };
+      }
+    }
+    
+    // Extract all comments with full article data
+    let userComments = [];
+    
+    for (const int of interactions) {
+      if (int.comments && int.comments.length > 0) {
+        const articleData = articleDataMap[int.articleId];
+        
+        for (const comment of int.comments) {
+          userComments.push({
+            articleId: int.articleId,
+            articleTitle: articleData.title,
+            articleData: articleData, // Include the full article data
+            text: comment.text,
+            timestamp: comment.timestamp,
+            username: comment.username || req.session.user.username
+          });
+        }
+      }
+    }
+    
+    // Sort by timestamp - most recent first
+    userComments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    res.json({ 
+      success: true,
+      comments: userComments
+    });
+  } catch (error) {
+    console.error('Error fetching user comments:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch user comments' 
+    });
+  }
+});
+
+
+
 // Track Read More Clicks
 app.post('/api/read-more', isAuthenticated, async (req, res) => {
   try {

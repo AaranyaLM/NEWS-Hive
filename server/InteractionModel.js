@@ -18,3 +18,17 @@ const interactionSchema = new mongoose.Schema({
 
 const Interaction = mongoose.model('Interaction', interactionSchema);
 module.exports = Interaction;
+
+
+
+// ArticleInfo model if you don't have it already
+const articleInfoSchema = new mongoose.Schema({
+  articleId: String, // Usually the URL for NewsAPI articles
+  title: String,
+  url: String,
+  source: String,
+  imageUrl: String,
+  publishedAt: Date
+});
+
+const ArticleInfo = mongoose.model('ArticleInfo', articleInfoSchema);

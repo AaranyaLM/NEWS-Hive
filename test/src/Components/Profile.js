@@ -11,15 +11,12 @@ function Profile() {
         comments: 0
     });
     const [activeTab, setActiveTab] = useState('saved');
+    const [userComments, setUserComments] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchUserProfile();
-        setUserStats({
-            articles: 12,
-            likes: 142,
-            comments: 38
-        });
+        fetchUserComments();
     }, []);
 
     const fetchUserProfile = async () => {
@@ -32,6 +29,11 @@ function Profile() {
             
             if (data.success) {
                 setUser(data.user);
+                setUserStats({
+                    articles: 12,
+                    likes: 142,
+                    comments: data.user.commentCount || 38
+                });
             } else {
                 // Redirect to login if not authenticated
                 navigate('/userauth');
@@ -44,8 +46,43 @@ function Profile() {
         }
     };
 
+    const fetchUserComments = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/user/comments', {
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                setUserComments(data.comments);
+                // Update the comments count in userStats
+                setUserStats(prev => ({
+                    ...prev,
+                    comments: data.comments.length
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to fetch user comments:', error);
+            setUserComments([]);
+        }
+    };
+
     const handleTabChange = (tab) => {
         setActiveTab(tab);
+    };
+
+    const formatDate = (dateString) => {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    };
+
+    // Handle clicking on a news article - navigate to Content page
+    const handleArticleClick = (article) => {
+        // Store article data in sessionStorage for the Content component to use
+        sessionStorage.setItem("currentArticle", JSON.stringify(article));
+        // Navigate to your content page
+        window.open('/content', '_blank');
     };
 
     const renderTabContent = () => {
@@ -62,28 +99,22 @@ function Profile() {
                         ))}
                     </div>
                 );
-            case 'liked':
-                return (
-                    <div className="content-grid">
-                        {[1, 2, 3, 4].map((item) => (
-                            <div key={item} className="grid-item">
-                                <div className="article-thumbnail">
-                                    <div className="placeholder-thumbnail">Liked Article {item}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                );
             case 'comments':
                 return (
                     <div className="comments-list">
-                        {[1, 2, 3, 4, 5].map((item) => (
-                            <div key={item} className="comment-item">
-                                <h3>Comment on Article {item}</h3>
-                                <p>This is a sample comment that the user made on an article.</p>
-                                <span className="comment-date">April 1, 2025</span>
+                        {userComments.length > 0 ? userComments.map((comment, index) => (
+                            <div key={index} className="comment-item">
+                                <h3 className="article-title" onClick={() => handleArticleClick(comment.articleData)} >
+                                    {comment.articleTitle || 'News Article'}
+                                </h3>
+                                <p className="comment-text">{comment.text}</p>
+                                <span className="comment-date">{formatDate(comment.timestamp)}</span>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="no-comments">
+                                <p>You haven't commented on any articles yet.</p>
+                            </div>
+                        )}
                     </div>
                 );
             default:
@@ -98,6 +129,11 @@ function Profile() {
     return (
         <div className="instagram-profile-container">
             <div className="profile-header">
+                <div className="profile-picture">
+                    <div className="avatar-circle">
+                        {user?.username?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                </div> 
                 <div className="profile-info">
                     <h1 className="profile-username">{user?.username}</h1>
                     <div className="user-stats">
@@ -115,11 +151,11 @@ function Profile() {
                         </div>
                     </div>
                     <button 
-    className="edit-profile-btn"
-    onClick={() => navigate('/edit-profile')}
->
-    Edit Profile
-</button>
+                        className="edit-profile-btn"
+                        onClick={() => navigate('/edit-profile')}
+                    >
+                        Edit Profile
+                    </button>
                 </div>
             </div>
             
@@ -134,12 +170,6 @@ function Profile() {
                     onClick={() => handleTabChange('saved')}
                 >
                     SAVED
-                </div>
-                <div 
-                    className={`tab ${activeTab === 'liked' ? 'active' : ''}`}
-                    onClick={() => handleTabChange('liked')}
-                >
-                    LIKED
                 </div>
                 <div 
                     className={`tab ${activeTab === 'comments' ? 'active' : ''}`}

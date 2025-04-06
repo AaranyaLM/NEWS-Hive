@@ -198,32 +198,51 @@
 } */
 
 /* Comments list styling */
+/* Add these styles to your existing Profile.css file */
+
+/* Comments list styling - minimalist version */
 .comments-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
 }
 
 .comment-item {
-    padding: 15px;
-    border: 1px solid #dbdbdb;
-    border-radius: 8px;
+    padding: 16px;
+    border-bottom: 1px solid #efefef;
     background-color: #fff;
+    transition: background-color 0.2s ease;
+}
+
+.comment-item:hover {
+    background-color: #fafafa;
 }
 
 .comment-item h3 {
-    margin: 0 0 10px 0;
-    font-size: 16px;
+    margin: 0 0 8px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #262626;
 }
 
 .comment-item p {
-    margin: 0 0 10px 0;
+    margin: 0 0 8px 0;
     color: #262626;
+    font-size: 14px;
+    line-height: 1.4;
 }
 
 .comment-date {
     font-size: 12px;
     color: #8e8e8e;
+    display: block;
+}
+
+.no-comments {
+    text-align: center;
+    padding: 30px 0;
+    color: #8e8e8e;
+    font-size: 14px;
 }
 
 /* Mobile Responsiveness */
