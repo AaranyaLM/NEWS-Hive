@@ -77,12 +77,68 @@ function Profile() {
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
 
+    // Generate a consistent article ID, ensuring URLs are properly handled
+    const generateArticleId = (article) => {
+        if (!article) return '';
+        
+        // If it's already a properly formatted URL, use it directly
+        if (article.url && (article.url.startsWith('http://') || article.url.startsWith('https://'))) {
+            return article.url;
+        }
+        
+        // If it's an encoded URL, decode it first to prevent double encoding
+        if (article.url && article.url.includes('%')) {
+            try {
+                return decodeURIComponent(article.url);
+            } catch (e) {
+                // If decoding fails, use as is
+                return article.url;
+            }
+        }
+        
+        // Fall back to article ID or empty string
+        return article.url || article.articleId || '';
+    };
+
     // Handle clicking on a news article - navigate to Content page
-    const handleArticleClick = (article) => {
-        // Store article data in sessionStorage for the Content component to use
-        sessionStorage.setItem("currentArticle", JSON.stringify(article));
-        // Navigate to your content page
-        window.open('/content', '_blank');
+    const handleArticleClick = async (article, e) => {
+        if (!user) return;
+        
+        if (e) e.preventDefault();
+        
+        // Ensure we have valid article data
+        if (!article) return;
+        
+        // Clean and prepare article object for storage
+        const cleanArticle = { ...article };
+        
+        // Fix URL if needed before using it as an ID
+        const articleId = generateArticleId(article);
+        
+        // Make sure the article has the proper URL
+        if (articleId && articleId.startsWith('http')) {
+            cleanArticle.url = articleId;
+        }
+        
+        try {
+            // Track the click (similar to read-more endpoint)
+            await fetch('http://localhost:5000/api/read-more', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ articleId }),
+            });
+        } catch (error) {
+            console.error('Failed to track article view:', error);
+            // Continue even if tracking fails
+        }
+        
+        // Store clean article in both sessionStorage and localStorage
+        sessionStorage.setItem('currentArticle', JSON.stringify(cleanArticle));
+        localStorage.setItem('currentArticle', JSON.stringify(cleanArticle));
+        
+        // Open content page in new tab
+        window.open(`${window.location.origin}/content`, '_blank');
     };
 
     const renderTabContent = () => {
@@ -104,8 +160,8 @@ function Profile() {
                     <div className="comments-list">
                         {userComments.length > 0 ? userComments.map((comment, index) => (
                             <div key={index} className="comment-item">
-                                <h3 className="article-title" onClick={() => handleArticleClick(comment.articleData)} >
-                                    {comment.articleTitle || 'News Article'}
+                                <h3 className="article-title" onClick={(e) => handleArticleClick(comment.articleData, e)}>
+                                    {comment.articleData?.title || comment.articleTitle || 'Article'}
                                 </h3>
                                 <p className="comment-text">{comment.text}</p>
                                 <span className="comment-date">{formatDate(comment.timestamp)}</span>

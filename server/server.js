@@ -347,7 +347,7 @@ app.post('/api/auth/resend-verification', async (req, res) => {
   }
 });
 
-// Modified login endpoint
+//  login endpoint
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;

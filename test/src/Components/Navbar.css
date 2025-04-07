@@ -147,3 +147,105 @@
     color: #6b7280;
     font-style: italic;
 }
+
+/* Mobile menu button */
+.mobile-menu-button {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+}
+
+.mobile-menu-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .navbar-links {
+        position: fixed;
+        top: 54px; /* Height of navbar */
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 6px 0;
+        transform: translateX(0);
+        gap: 16px;
+        width: 100%;
+        align-items: center;
+        z-index: 99;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .navbar-links.open {
+        max-height: 200px; /* Adjust based on content */
+    }
+    
+    .navbar-links a {
+        width: 100%;
+        text-align: center;
+        padding: 10px 0;
+    }
+    
+    .mobile-menu-button {
+        display: block;
+    }
+    
+    .navbar-auth {
+        margin-left: 0;
+    }
+    
+    .navbar-container {
+        justify-content: space-between;
+        padding: 7px 16px;
+    }
+    
+    .user-profile {
+        padding: 4px 8px;
+        gap: 8px;
+    }
+    
+    .username {
+        font-size: 14px;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* Restore center-aligned navbar links to normal layout */
+    .navbar-links {
+        position: fixed;
+        left: 0;
+        transform: none;
+    }
+    
+    /* Make logout button smaller on mobile */
+    .logout-button {
+        font-size: 14px;
+        padding: 4px 10px;
+    }
+    
+    /* More compact login button */
+    .login-button {
+        font-size: 14px;
+        padding: 5px 12px;
+    }
+}
+
+/* Medium screens adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .navbar-links {
+        position: relative;
+        left: 0;
+        transform: none;
+        margin-left: 20px;
+    }
+}
