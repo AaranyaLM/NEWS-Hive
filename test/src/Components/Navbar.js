@@ -7,6 +7,7 @@ function Navbar() {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     
@@ -40,7 +41,15 @@ function Navbar() {
         setMenuOpen(false);
     }, [location.pathname]);
 
-    const handleLogout = async () => {
+    const initiateLogout = () => {
+        setShowLogoutConfirm(true);
+    };
+
+    const cancelLogout = () => {
+        setShowLogoutConfirm(false);
+    };
+
+    const confirmLogout = async () => {
         try {
             const response = await fetch('http://localhost:5000/api/auth/logout', {
                 method: 'POST',
@@ -49,6 +58,7 @@ function Navbar() {
             
             if (response.ok) {
                 setUser(null);
+                setShowLogoutConfirm(false);
                 navigate('/userauth');
             } else {
                 console.error('Logout failed');
@@ -68,73 +78,98 @@ function Navbar() {
     };
 
     return (
-        <nav className="slim-navbar">
-            <div className="navbar-container">
-                <Link to="/" className="navbar-logo">
-                    <img src={Logo} alt="Logo" />
-                </Link>
-                
-                <button 
-                    className="mobile-menu-button" 
-                    onClick={toggleMenu}
-                    aria-label="Toggle navigation menu"
-                >
-                    <svg 
-                        className="mobile-menu-icon" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
+        <>
+            <nav className="slim-navbar">
+                <div className="navbar-container">
+                    <Link to="/" className="navbar-logo">
+                        <img src={Logo} alt="Logo" />
+                    </Link>
+                    
+                    <button 
+                        className="mobile-menu-button" 
+                        onClick={toggleMenu}
+                        aria-label="Toggle navigation menu"
                     >
-                        {menuOpen ? (
-                            // X icon when menu is open
-                            <>
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </>
-                        ) : (
-                            // Hamburger icon when menu is closed
-                            <>
-                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                            </>
-                        )}
-                    </svg>
-                </button>
-                
-                <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-                    <Link to="/" className={isActive('/')}>Home</Link>
-                    <Link to="/trending" className={isActive('/trending')}>Trending</Link>
-                </div>
-                
-                <div className="navbar-auth">
-                    {isLoading ? (
-                        <span className="loading-text">Loading...</span>
-                    ) : user ? (
-                        <div className="user-profile">
-                            <div className="user-icon">
-                            <Link to="/profile" className="username"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg></Link>
+                        <svg 
+                            className="mobile-menu-icon" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                        >
+                            {menuOpen ? (
+                                // X icon when menu is open
+                                <>
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </>
+                            ) : (
+                                // Hamburger icon when menu is closed
+                                <>
+                                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                                </>
+                            )}
+                        </svg>
+                    </button>
+                    
+                    <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
+                        <Link to="/" className={isActive('/')}>Home</Link>
+                        <Link to="/trending" className={isActive('/trending')}>Trending</Link>
+                    </div>
+                    
+                    <div className="navbar-auth">
+                        {isLoading ? (
+                            <span className="loading-text">Loading...</span>
+                        ) : user ? (
+                            <div className="user-profile">
+                                <div className="user-icon">
+                                <Link to="/profile" className="username"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg></Link>
+                                </div>
+                                <Link to="/profile" className="username">{user.username}</Link>
+                                <button onClick={initiateLogout} className="logout-button">
+                                    Logout
+                                </button>
                             </div>
-                            <Link to="/profile" className="username">{user.username}</Link>
-                            <button onClick={handleLogout} className="logout-button">
-                                Logout
+                        ) : (
+                            <Link to="/userauth" className="login-button">
+                                Login
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            </nav>
+
+            {/* Logout Confirmation Popup */}
+            {showLogoutConfirm && (
+                <div className="logout-popup-overlay">
+                    <div className="logout-popup">
+                        <div className="logout-popup-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M10 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4M16 17l5-5-5-5M21 12H9"/>
+                            </svg>
+                            <h3>Confirm Logout</h3>
+                        </div>
+                        <p>Are you sure you want to log out?</p>
+                        <div className="logout-popup-buttons">
+                            <button onClick={cancelLogout} className="cancel-button">
+                                Cancel
+                            </button>
+                            <button onClick={confirmLogout} className="confirm-button">
+                                Yes, Log Out
                             </button>
                         </div>
-                    ) : (
-                        <Link to="/userauth" className="login-button">
-                            Login
-                        </Link>
-                    )}
+                    </div>
                 </div>
-            </div>
-        </nav>
+            )}
+        </>
     );
 }
 

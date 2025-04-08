@@ -1,4 +1,3 @@
-// Frontend changes to Profile.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
@@ -16,8 +15,14 @@ function Profile() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchUserProfile();
-        fetchUserComments();
+        // Load both data sources sequentially
+        const loadProfileData = async () => {
+            await fetchUserProfile();
+            await fetchUserComments();
+            setIsLoading(false);
+        };
+        
+        loadProfileData();
     }, []);
 
     const fetchUserProfile = async () => {
@@ -30,19 +35,21 @@ function Profile() {
             
             if (data.success) {
                 setUser(data.user);
-                setUserStats({
-                    articles: 12,
-                    comments: data.user.commentCount || 38
-                });
+                // Only set articles count, comments will be set from fetchUserComments
+                setUserStats(prev => ({
+                    ...prev,
+                    articles: 12 // Keep your article count logic
+                }));
             } else {
                 // Redirect to login if not authenticated
                 navigate('/userauth');
+                return false;
             }
+            return true;
         } catch (error) {
             console.error('Failed to fetch user profile:', error);
             navigate('/userauth');
-        } finally {
-            setIsLoading(false);
+            return false;
         }
     };
 
@@ -56,15 +63,22 @@ function Profile() {
             
             if (data.success) {
                 setUserComments(data.comments);
-                // Update the comments count in userStats
+                // Set the comments count based on the actual comments array length
                 setUserStats(prev => ({
                     ...prev,
                     comments: data.comments.length
                 }));
             }
+            return true;
         } catch (error) {
             console.error('Failed to fetch user comments:', error);
             setUserComments([]);
+            // Reset comments count to 0 if fetch fails
+            setUserStats(prev => ({
+                ...prev,
+                comments: 0
+            }));
+            return false;
         }
     };
 
@@ -141,11 +155,11 @@ function Profile() {
         window.open(`${window.location.origin}/content`, '_blank');
     };
 
-    // NEW FUNCTION: Handle comment deletion
+    // Handle comment deletion
     const handleDeleteComment = async (comment) => {
         if (!comment || !comment.articleId || isDeleting) return;
         
-        // Show loading state
+        // Show loading state for this specific comment
         setIsDeleting(true);
         
         try {
@@ -163,17 +177,17 @@ function Profile() {
             
             if (data.success) {
                 // Remove the deleted comment from the UI
-                setUserComments(prevComments => 
-                    prevComments.filter(c => 
-                        !(c.articleId === comment.articleId && 
-                          c.timestamp === comment.timestamp)
-                    )
+                const updatedComments = userComments.filter(c => 
+                    !(c.articleId === comment.articleId && 
+                      c.timestamp === comment.timestamp)
                 );
                 
-                // Update comment count
+                setUserComments(updatedComments);
+                
+                // Update comment count based on the new array length
                 setUserStats(prev => ({
                     ...prev,
-                    comments: prev.comments - 1
+                    comments: updatedComments.length
                 }));
                 
                 // Show success feedback (optional)
@@ -207,7 +221,7 @@ function Profile() {
                 return (
                     <div className="comments-list">
                         {userComments.length > 0 ? userComments.map((comment, index) => (
-                            <div key={index} className="comment-item">
+                            <div key={`comment-${comment.articleId}-${comment.timestamp}`} className="comment-item">
                                 <div className="comment-header">
                                     <h3 className="article-title" onClick={(e) => handleArticleClick(comment.articleData, e)}>
                                        Commented on "{comment.articleData?.title || comment.articleTitle || 'Article'}"
