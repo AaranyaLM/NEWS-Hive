@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
+import Toast from './Toast'; // Import the Toast component
 
 function Profile() {
     const [user, setUser] = useState(null);
@@ -13,6 +14,28 @@ function Profile() {
     const [userComments, setUserComments] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
     const navigate = useNavigate();
+    
+    // Toast notification state
+    const [toast, setToast] = useState({
+        visible: false,
+        message: ''
+    });
+
+    // Function to show toast message
+    const showToast = (message) => {
+        setToast({
+            visible: true,
+            message
+        });
+    };
+
+    // Function to hide toast message
+    const hideToast = () => {
+        setToast({
+            ...toast,
+            visible: false
+        });
+    };
 
     useEffect(() => {
         // Load both data sources sequentially
@@ -155,7 +178,7 @@ function Profile() {
         window.open(`${window.location.origin}/content`, '_blank');
     };
 
-    // Handle comment deletion
+    // Handle comment deletion - UPDATED with Toast notification
     const handleDeleteComment = async (comment) => {
         if (!comment || !comment.articleId || isDeleting) return;
         
@@ -190,14 +213,15 @@ function Profile() {
                     comments: updatedComments.length
                 }));
                 
-                // Show success feedback (optional)
-                alert('Comment deleted successfully');
+                // Show toast notification instead of alert
+                showToast('Comment deleted successfully');
             } else {
-                alert(data.error || 'Failed to delete comment');
+                // Show error toast
+                showToast(data.error || 'Failed to delete comment');
             }
         } catch (error) {
             console.error('Error deleting comment:', error);
-            alert('An error occurred while deleting the comment');
+            showToast('An error occurred while deleting the comment');
         } finally {
             setIsDeleting(false);
         }
@@ -255,6 +279,14 @@ function Profile() {
 
     return (
         <div className="instagram-profile-container">
+            {/* Toast Component */}
+            <Toast 
+                message={toast.message}
+                visible={toast.visible}
+                onHide={hideToast}
+                duration={2000} // Display for 2 seconds
+            />
+            
             <div className="profile-header">
                 <div className="profile-picture">
                     <div className="avatar-circle">

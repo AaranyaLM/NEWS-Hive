@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './EditProfile.css';
+import Toast from './Toast'; // Import the Toast component
 
 function EditProfile() {
     const [user, setUser] = useState(null);
@@ -13,11 +14,32 @@ function EditProfile() {
         confirmPassword: ''
     });
     const [errors, setErrors] = useState({});
-    const [successMessage, setSuccessMessage] = useState('');
     const [activeSection, setActiveSection] = useState('info');
     const [canChangeUsername, setCanChangeUsername] = useState(true);
     const [usernameTimeLeft, setUsernameTimeLeft] = useState(null);
     const navigate = useNavigate();
+    
+    // Toast notification state
+    const [toast, setToast] = useState({
+        visible: false,
+        message: ''
+    });
+
+    // Function to show toast message
+    const showToast = (message) => {
+        setToast({
+            visible: true,
+            message
+        });
+    };
+
+    // Function to hide toast message
+    const hideToast = () => {
+        setToast({
+            ...toast,
+            visible: false
+        });
+    };
 
     useEffect(() => {
         fetchUserProfile();
@@ -116,7 +138,6 @@ function EditProfile() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSuccessMessage('');
         
         if (!validateProfileInfo()) {
             return;
@@ -151,7 +172,8 @@ function EditProfile() {
             const data = await response.json();
             
             if (data.success) {
-                setSuccessMessage(data.message || 'Profile updated successfully');
+                // Show success toast instead of setting successMessage
+                showToast(data.message || 'Profile updated successfully');
                 
                 if (activeSection === 'password') {
                     // Clear password fields after successful update
@@ -183,7 +205,6 @@ function EditProfile() {
     const switchSection = (section) => {
         setActiveSection(section);
         setErrors({});
-        setSuccessMessage('');
     };
 
     if (loading) {
@@ -192,6 +213,14 @@ function EditProfile() {
 
     return (
         <div className="edit-profile-container">
+            {/* Toast Component */}
+            <Toast 
+                message={toast.message}
+                visible={toast.visible}
+                onHide={hideToast}
+                duration={2000} // Display for 2 seconds
+            />
+            
             <h1>Edit Profile</h1>
             
             <div className="profile-sections">
@@ -208,10 +237,6 @@ function EditProfile() {
                     Change Password
                 </div>
             </div>
-            
-            {successMessage && (
-                <div className="success-message">{successMessage}</div>
-            )}
             
             {errors.form && (
                 <div className="error-message">{errors.form}</div>
