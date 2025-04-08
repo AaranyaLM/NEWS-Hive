@@ -1156,55 +1156,84 @@ app.get('/api/user/comments', isAuthenticated, async (req, res) => {
     // Create a lookup object for article data
     const articleDataMap = {};
     
-    // Simpler approach to get article data
-    for (const interaction of interactions) {
-      const articleId = interaction.articleId;
-      
-      if (!articleDataMap[articleId]) {
-        try {
-          // Try to get article data from any available source
+    // Extract articleIds to find corresponding article info
+    const articleIds = interactions.map(int => int.articleId);
+    
+    // First try to find article info in the ArticleInfo collection
+    for (const articleId of articleIds) {
+      try {
+        // Try to find article info in your collection first
+        const articleInfo = await ArticleInfo.findOne({ articleId }).lean();
+        
+        if (articleInfo) {
+          // Use data from your database if available
+          articleDataMap[articleId] = {
+            title: articleInfo.title,
+            url: decodeURIComponent(articleId), // Decode URL for display
+            source: { name: articleInfo.source || extractSourceFromUrl(decodeURIComponent(articleId)) },
+            publishedAt: articleInfo.publishedAt || new Date().toISOString(),
+            urlToImage: articleInfo.imageUrl
+          };
+        } else {
+          // Fall back to extracting info from the URL
           const decodedUrl = decodeURIComponent(articleId);
-          
-          // Try to extract title from URL
-          let title = 'News Article';
-          let sourceName = 'External Source';
-          
-          try {
-            const urlObj = new URL(decodedUrl);
-            sourceName = urlObj.hostname.replace('www.', '');
-            
-            // Try to get a better title from path segments
-            const pathSegments = urlObj.pathname.split('/').filter(Boolean);
-            if (pathSegments.length > 0) {
-              const lastSegment = pathSegments[pathSegments.length - 1]
-                .replace(/-/g, ' ')
-                .replace(/\.(html|php|asp|aspx)$/, '');
-                
-              if (lastSegment.length > 3) {
-                title = lastSegment
-                  .split('-')
-                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(' ');
-              }
-            }
-          } catch (e) {
-            // URL parsing failed, use defaults
-          }
+          const sourceName = extractSourceFromUrl(decodedUrl);
+          const title = extractTitleFromUrl(decodedUrl);
           
           articleDataMap[articleId] = {
             title: title,
             url: decodedUrl,
-            source: { name: sourceName }
-          };
-          
-        } catch (err) {
-          console.error(`Error processing article ${articleId}:`, err);
-          articleDataMap[articleId] = {
-            title: 'News Article',
-            url: decodeURIComponent(articleId),
-            source: { name: 'External Source' }
+            source: { name: sourceName },
+            publishedAt: new Date().toISOString()
           };
         }
+      } catch (err) {
+        console.error(`Error processing article ${articleId}:`, err);
+        // Provide fallback data
+        const decodedUrl = decodeURIComponent(articleId);
+        articleDataMap[articleId] = {
+          title: extractTitleFromUrl(decodedUrl) || 'News Article',
+          url: decodedUrl,
+          source: { name: extractSourceFromUrl(decodedUrl) || 'External Source' },
+          publishedAt: new Date().toISOString()
+        };
+      }
+    }
+    
+    // Helper function to extract source from URL
+    function extractSourceFromUrl(url) {
+      try {
+        const urlObj = new URL(url);
+        return urlObj.hostname.replace('www.', '');
+      } catch (e) {
+        return 'Unknown Source';
+      }
+    }
+    
+    // Helper function to extract a title from URL
+    function extractTitleFromUrl(url) {
+      try {
+        const urlObj = new URL(url);
+        const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+        
+        if (pathSegments.length > 0) {
+          const lastSegment = pathSegments[pathSegments.length - 1]
+            .replace(/-/g, ' ')
+            .replace(/\.(html|php|asp|aspx)$/, '')
+            .replace(/\d+$/, ''); // Remove trailing numbers
+            
+          if (lastSegment.length > 3) {
+            return lastSegment
+              .split(/[-_]/)
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+          }
+        }
+        
+        // If we can't extract from path, try the hostname
+        return urlObj.hostname.replace('www.', '') + ' Article';
+      } catch (e) {
+        return 'News Article';
       }
     }
     
@@ -1245,7 +1274,75 @@ app.get('/api/user/comments', isAuthenticated, async (req, res) => {
   }
 });
 
-
+app.delete('/api/user/comments/delete', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { articleId, timestamp } = req.body;
+    
+    if (!articleId || !timestamp) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required data (articleId or timestamp)'
+      });
+    }
+    
+    // Find the interaction for this user and article
+    const interaction = await Interaction.findOne({
+      userId: userId,
+      articleId: articleId
+    });
+    
+    if (!interaction) {
+      return res.status(404).json({
+        success: false,
+        error: 'Interaction not found'
+      });
+    }
+    
+    // Check if the interaction has comments
+    if (!interaction.comments || interaction.comments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No comments found for this article'
+      });
+    }
+    
+    // Create a new Date object to match with the stored timestamp
+    const commentDate = new Date(timestamp);
+    
+    // Find the index of the comment with matching timestamp
+    const commentIndex = interaction.comments.findIndex(comment => {
+      const storedDate = new Date(comment.timestamp);
+      return storedDate.getTime() === commentDate.getTime();
+    });
+    
+    if (commentIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Comment not found'
+      });
+    }
+    
+    // Remove the comment from the array
+    interaction.comments.splice(commentIndex, 1);
+    
+    // Save the updated interaction
+    await interaction.save();
+    
+    res.json({
+      success: true,
+      message: 'Comment deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete comment',
+      message: error.message
+    });
+  }
+});
 
 // Track Read More Clicks
 app.post('/api/read-more', isAuthenticated, async (req, res) => {

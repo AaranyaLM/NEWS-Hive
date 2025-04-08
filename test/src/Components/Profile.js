@@ -1,3 +1,4 @@
+// Frontend changes to Profile.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
@@ -11,6 +12,7 @@ function Profile() {
     });
     const [activeTab, setActiveTab] = useState('saved');
     const [userComments, setUserComments] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -139,6 +141,54 @@ function Profile() {
         window.open(`${window.location.origin}/content`, '_blank');
     };
 
+    // NEW FUNCTION: Handle comment deletion
+    const handleDeleteComment = async (comment) => {
+        if (!comment || !comment.articleId || isDeleting) return;
+        
+        // Show loading state
+        setIsDeleting(true);
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/user/comments/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    articleId: comment.articleId,
+                    timestamp: comment.timestamp
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Remove the deleted comment from the UI
+                setUserComments(prevComments => 
+                    prevComments.filter(c => 
+                        !(c.articleId === comment.articleId && 
+                          c.timestamp === comment.timestamp)
+                    )
+                );
+                
+                // Update comment count
+                setUserStats(prev => ({
+                    ...prev,
+                    comments: prev.comments - 1
+                }));
+                
+                // Show success feedback (optional)
+                alert('Comment deleted successfully');
+            } else {
+                alert(data.error || 'Failed to delete comment');
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            alert('An error occurred while deleting the comment');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const renderTabContent = () => {
         switch (activeTab) {
             case 'saved':
@@ -158,9 +208,18 @@ function Profile() {
                     <div className="comments-list">
                         {userComments.length > 0 ? userComments.map((comment, index) => (
                             <div key={index} className="comment-item">
-                                <h3 className="article-title" onClick={(e) => handleArticleClick(comment.articleData, e)}>
-                                    {comment.articleData?.title || comment.articleTitle || 'Article'}
-                                </h3>
+                                <div className="comment-header">
+                                    <h3 className="article-title" onClick={(e) => handleArticleClick(comment.articleData, e)}>
+                                       Commented on "{comment.articleData?.title || comment.articleTitle || 'Article'}"
+                                    </h3>
+                                    <button 
+                                        className="delete-comment-btn"
+                                        onClick={() => handleDeleteComment(comment)}
+                                        disabled={isDeleting}
+                                    >
+                                        {isDeleting ? 'Deleting...' : '×'}
+                                    </button>
+                                </div>
                                 <p className="comment-text">{comment.text}</p>
                                 <span className="comment-date">{formatDate(comment.timestamp)}</span>
                             </div>
