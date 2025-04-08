@@ -1153,50 +1153,62 @@ app.get('/api/user/comments', isAuthenticated, async (req, res) => {
       'comments.0': { $exists: true } // Only get interactions with at least one comment
     }).lean();
     
-    // Create an array of articleIds to fetch their data
-    const articleIds = interactions.map(int => int.articleId);
-    
     // Create a lookup object for article data
     const articleDataMap = {};
     
-    // For each articleId, retrieve or create the necessary article data
-    for (const articleId of articleIds) {
-      try {
-        // Try to find stored article data
-        const articleInfo = await ArticleInfo.findOne({ articleId }).lean();
-        
-        if (articleInfo) {
-          // Use stored data
+    // Simpler approach to get article data
+    for (const interaction of interactions) {
+      const articleId = interaction.articleId;
+      
+      if (!articleDataMap[articleId]) {
+        try {
+          // Try to get article data from any available source
+          const decodedUrl = decodeURIComponent(articleId);
+          
+          // Try to extract title from URL
+          let title = 'News Article';
+          let sourceName = 'External Source';
+          
+          try {
+            const urlObj = new URL(decodedUrl);
+            sourceName = urlObj.hostname.replace('www.', '');
+            
+            // Try to get a better title from path segments
+            const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+            if (pathSegments.length > 0) {
+              const lastSegment = pathSegments[pathSegments.length - 1]
+                .replace(/-/g, ' ')
+                .replace(/\.(html|php|asp|aspx)$/, '');
+                
+              if (lastSegment.length > 3) {
+                title = lastSegment
+                  .split('-')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+              }
+            }
+          } catch (e) {
+            // URL parsing failed, use defaults
+          }
+          
           articleDataMap[articleId] = {
-            title: articleInfo.title,
-            url: articleInfo.url || articleId,
-            source: { name: articleInfo.source || 'Unknown Source' },
-            publishedAt: articleInfo.publishedAt || new Date().toISOString(),
-            urlToImage: articleInfo.imageUrl
+            title: title,
+            url: decodedUrl,
+            source: { name: sourceName }
           };
-        } else {
-          // If we don't have it stored, create minimal article data
-          // The articleId should be the URL for NewsAPI articles
+          
+        } catch (err) {
+          console.error(`Error processing article ${articleId}:`, err);
           articleDataMap[articleId] = {
             title: 'News Article',
-            url: articleId,
-            source: { name: 'External Source' },
-            publishedAt: new Date().toISOString()
+            url: decodeURIComponent(articleId),
+            source: { name: 'External Source' }
           };
         }
-      } catch (err) {
-        console.error(`Error fetching data for article ${articleId}:`, err);
-        // Create fallback data
-        articleDataMap[articleId] = {
-          title: 'News Article',
-          url: articleId,
-          source: { name: 'External Source' },
-          publishedAt: new Date().toISOString()
-        };
       }
     }
     
-    // Extract all comments with full article data
+    // Extract all comments with article data
     let userComments = [];
     
     for (const int of interactions) {
@@ -1207,7 +1219,7 @@ app.get('/api/user/comments', isAuthenticated, async (req, res) => {
           userComments.push({
             articleId: int.articleId,
             articleTitle: articleData.title,
-            articleData: articleData, // Include the full article data
+            articleData: articleData,
             text: comment.text,
             timestamp: comment.timestamp,
             username: comment.username || req.session.user.username
@@ -1227,7 +1239,8 @@ app.get('/api/user/comments', isAuthenticated, async (req, res) => {
     console.error('Error fetching user comments:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Failed to fetch user comments' 
+      error: 'Failed to fetch user comments',
+      message: error.message
     });
   }
 });

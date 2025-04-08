@@ -7,7 +7,6 @@ function Profile() {
     const [isLoading, setIsLoading] = useState(true);
     const [userStats, setUserStats] = useState({
         articles: 0,
-        likes: 0,
         comments: 0
     });
     const [activeTab, setActiveTab] = useState('saved');
@@ -31,7 +30,6 @@ function Profile() {
                 setUser(data.user);
                 setUserStats({
                     articles: 12,
-                    likes: 142,
                     comments: data.user.commentCount || 38
                 });
             } else {
@@ -197,10 +195,7 @@ function Profile() {
                             <span className="stat-number">{userStats.articles}</span>
                             <span className="stat-label">saved</span>
                         </div>
-                        <div className="stat-item">
-                            <span className="stat-number">{userStats.likes}</span>
-                            <span className="stat-label">likes</span>
-                        </div>
+                     
                         <div className="stat-item">
                             <span className="stat-number">{userStats.comments}</span>
                             <span className="stat-label">comments</span>
