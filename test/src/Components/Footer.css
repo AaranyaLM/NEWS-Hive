@@ -6,7 +6,7 @@
     position: relative;
     z-index: 10;
     margin-left: auto; 
-    width: calc(100% - 280px);
+    margin-left: 280px;
   }
   
   .footer-container {
@@ -113,14 +113,19 @@
   
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    .footer-top {
+    .footer {
+      width: 100%; /* Full width on mobile */
+      margin-left: 0; /* No margin on mobile */
+  }
+  
+  .footer-top {
       flex-direction: column;
       gap: 1.5rem;
       text-align: center;
-    }
-    
-    .footer-nav {
+  }
+  
+  .footer-nav {
       flex-wrap: wrap;
       justify-content: center;
-    }
+  }
   }
