@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Articles.css';
-import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes, FaPaperPlane } from 'react-icons/fa';
+import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes, FaPaperPlane, FaEllipsisV, FaBookmark, FaDownload } from 'react-icons/fa';
 
 const Articles = ({ articles }) => {
   const [likedArticles, setLikedArticles] = useState({});
@@ -14,6 +14,8 @@ const Articles = ({ articles }) => {
   const [loadingLikes, setLoadingLikes] = useState(true);
   // State for tracking floating like button animations
   const [floatingLikes, setFloatingLikes] = useState({});
+  // State for tracking which article has its menu open
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   const generateArticleId = (article) => {
     // Log to confirm encoding is identical to what's in the database
@@ -39,6 +41,18 @@ const Articles = ({ articles }) => {
       fetchComments(currentArticle);
     }
   }, [currentArticle]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   const fetchAuthStatus = async () => {
     try {
@@ -178,6 +192,7 @@ const toggleLike = async (article) => {
     setCurrentArticle(null);
     setCommentText('');
   };
+
   const handleSubmitComment = async () => {
     if (!commentText.trim() || !currentArticle || !currentUser) return;
   
@@ -281,6 +296,25 @@ const toggleLike = async (article) => {
     }
   };
 
+  // Toggle menu open/closed
+  const toggleMenu = (e, articleId) => {
+    e.stopPropagation(); // Prevent event bubbling
+    setOpenMenuId(openMenuId === articleId ? null : articleId);
+  };
+
+  // Placeholder functions for save and download (no functionality as requested)
+  const handleSave = (e, article) => {
+    e.stopPropagation();
+    console.log('Save article:', article.title);
+    setOpenMenuId(null);
+  };
+
+  const handleDownload = (e, article) => {
+    e.stopPropagation();
+    console.log('Download article:', article.title);
+    setOpenMenuId(null);
+  };
+
   return (
     <div className="articles-container">
       <div className="articles">
@@ -297,6 +331,30 @@ const toggleLike = async (article) => {
                       <div className="source">{article.source.name || 'Unknown Source'}</div>
                       <div className="time">{new Date(article.publishedAt).toLocaleString()}</div>
                     </div>
+                  </div>
+                  <div className="menu-container">
+                    <button 
+                      className="menu-button" 
+                      onClick={(e) => toggleMenu(e, articleId)}
+                    >
+                      <FaEllipsisV />
+                    </button>
+                    {openMenuId === articleId && (
+                      <div className="menu-dropdown">
+                        <div 
+                          className="menu-item" 
+                          onClick={(e) => handleSave(e, article)}
+                        >
+                          <FaBookmark /> Save
+                        </div>
+                        <div 
+                          className="menu-item" 
+                          onClick={(e) => handleDownload(e, article)}
+                        >
+                          <FaDownload /> Download
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="article-content">
@@ -332,13 +390,13 @@ const toggleLike = async (article) => {
                   <p>{article.description}</p>
                 </div>
                 <div className="article-actions">
-                <button 
-                  onClick={() => toggleLike(article)} 
-                  className="like-button"
-                  data-article-id={articleId}
-                >
-                  {likedArticles[articleId] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#000" />} Like
-                </button>
+                  <button 
+                    onClick={() => toggleLike(article)} 
+                    className="like-button"
+                    data-article-id={articleId}
+                  >
+                    {likedArticles[articleId] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#000" />} Like
+                  </button>
                   <button onClick={() => openCommentSidebar(article)} className="comment-button">
                     <FaCommentAlt color="#000" /> Comments
                   </button>
