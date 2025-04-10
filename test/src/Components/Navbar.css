@@ -38,7 +38,7 @@
     top: 0;
     left: 0;
     height: 100%;
-    width: 280px;
+    width: 300px;
     background-color: white;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
     z-index: 100;
@@ -53,14 +53,15 @@
 }
 
 .sidebar-logo {
-    padding: 0 20px 30px 20px;
+    padding: 0 20px 10px ;
     margin-bottom: 10px;
     border-bottom: 1px solid #f1f1f1;
 }
 
 .sidebar-logo img {
-    height: 40px;
+    height: 50px;
     transition: transform 0.2s ease;
+   
 }
 
 .sidebar-logo img:hover {
