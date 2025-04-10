@@ -14,6 +14,7 @@
 
 .mobile-only {
     display: block;
+    position: fixed;
 }
 
 @media (min-width: 769px) {
@@ -23,6 +24,7 @@
     
     .mobile-only {
         display: none;
+        position: fixed;
     }
     
     .main-content {
@@ -146,7 +148,7 @@
 
 /* Original Slim Navbar (Mobile) */
 .slim-navbar {
-    position: sticky;
+    position: fixed;
     top: 0;
     z-index: 100;
     background-color: white;

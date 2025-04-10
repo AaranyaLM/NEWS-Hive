@@ -142,6 +142,13 @@
   overflow-y: auto; /* Add scroll if content is too long */
 }
 
+
+@media (max-width: 769px) {
+  .comment-sidebar {
+    top: 70px;
+    height: calc(100vh - 70px);
+  }
+}
 .sidebar-header {
   display: flex;
   justify-content: space-between;
