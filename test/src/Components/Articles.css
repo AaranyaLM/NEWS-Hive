@@ -108,7 +108,7 @@
   gap: 5px;
 }
 
-.share-button {
+.share-btn {
   color: black;
   display: flex;
   align-items: center;
@@ -296,4 +296,38 @@
 
 .floating-like-button {
   pointer-events: none;
+}
+
+/* Add these to your Articles.css file */
+
+.content-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.loader-pulse {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #e1e1e1;
+  animation: pulse 1.2s infinite ease-in-out;
+  margin-bottom: 15px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
 }

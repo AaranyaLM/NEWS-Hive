@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Articles.css';
-import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes,FaPaperPlane  } from 'react-icons/fa';
+import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes, FaPaperPlane } from 'react-icons/fa';
 
 const Articles = ({ articles }) => {
   const [likedArticles, setLikedArticles] = useState({});
@@ -342,7 +342,7 @@ const toggleLike = async (article) => {
                   <button onClick={() => openCommentSidebar(article)} className="comment-button">
                     <FaCommentAlt color="#000" /> Comments
                   </button>
-                  <button onClick={() => handleShare(article)} className="share-button">
+                  <button onClick={() => handleShare(article)} className="share-btn">
                     <FaShareAlt color="#000" /> {shared === articleId ? 'Copied!' : 'Share'}
                   </button>
                   <button onClick={(e) => handleReadMore(article, e)} className="read-more-button">
@@ -353,7 +353,10 @@ const toggleLike = async (article) => {
             );
           })
         ) : (
-          <p>Loading news...</p>
+          <div className="content-loader">
+            <div className="loader-pulse"></div>
+            <p>Loading news...</p>
+          </div>
         )}
       </div>
 
@@ -376,7 +379,10 @@ const toggleLike = async (article) => {
           
           <div className="comments-list">
             {loading ? (
-              <p>Loading comments...</p>
+              <div className="content-loader">
+                <div className="loader-pulse"></div>
+                <p>Loading comments...</p>
+              </div>
             ) : comments.length > 0 ? (
               comments.map((comment, index) => (
                 <div key={index} className="comment-item">
@@ -397,14 +403,12 @@ const toggleLike = async (article) => {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
             />
-            <button onClick={handleSubmitComment}>  <FaPaperPlane /></button>
+            <button onClick={handleSubmitComment}><FaPaperPlane /></button>
           </div>
         </div>
       )}
     </div>
   );
 };
-
-
 
 export default Articles;
