@@ -130,10 +130,10 @@
 /* Comment Sidebar Styles */
 .comment-sidebar {
   position: fixed;
-  top: 60px; /* Add space for navigation bar - adjust this value based on your nav bar height */
+  top: 0px; /* Add space for navigation bar - adjust this value based on your nav bar height */
   right: 0;
   width: 350px;
-  height: calc(100vh - 60px); /* Subtract the nav bar height from total height */
+  height: calc(100vh ); /* Subtract the nav bar height from total height */
   background-color: white;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   z-index: 0;
