@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './Articles.css';
-import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes, FaPaperPlane, FaEllipsisV, FaBookmark, FaDownload } from 'react-icons/fa';
+import { FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaTimes, FaPaperPlane, FaEllipsisV, FaBookmark, FaDownload, FaBookmark as FaBookmarkSolid } from 'react-icons/fa';
 
 const Articles = ({ articles }) => {
   const [likedArticles, setLikedArticles] = useState({});
+  const [savedArticles, setSavedArticles] = useState({}); // Track saved articles
   const [shared, setShared] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [showCommentSidebar, setShowCommentSidebar] = useState(false);
@@ -72,7 +73,7 @@ const Articles = ({ articles }) => {
     }
   };
 
-  // New function to fetch user's interaction data (likes)
+  // Modified to fetch user's interaction data (including saves)
   const fetchUserInteractions = async () => {
     setLoadingLikes(true);
     try {
@@ -89,15 +90,21 @@ const Articles = ({ articles }) => {
       
       const interactions = await response.json();
       
-      // Convert the array of interactions to an object keyed by articleId
+      // Convert the array of interactions to objects keyed by articleId
       const likedArticlesMap = {};
+      const savedArticlesMap = {};
+      
       interactions.forEach(interaction => {
         if (interaction.liked) {
           likedArticlesMap[interaction.articleId] = true;
         }
+        if (interaction.saved) {
+          savedArticlesMap[interaction.articleId] = true;
+        }
       });
       
       setLikedArticles(likedArticlesMap);
+      setSavedArticles(savedArticlesMap);
     } catch (error) {
       console.error('Error fetching user interactions:', error);
     } finally {
@@ -115,6 +122,7 @@ const checkAllComments = async () => {
     console.error('Error checking all comments:', error);
   }
 };
+
 const toggleLike = async (article) => {
   if (!currentUser) return;
   
@@ -302,13 +310,50 @@ const toggleLike = async (article) => {
     setOpenMenuId(openMenuId === articleId ? null : articleId);
   };
 
-  // Placeholder functions for save and download (no functionality as requested)
-  const handleSave = (e, article) => {
+  // Updated save article function
+  const handleSaveArticle = async (e, article) => {
     e.stopPropagation();
-    console.log('Save article:', article.title);
-    setOpenMenuId(null);
+    if (!currentUser) return;
+    
+    const articleId = generateArticleId(article);
+    
+    // Update UI immediately for responsive feel
+    setSavedArticles((prev) => ({
+      ...prev,
+      [articleId]: !prev[articleId],
+    }));
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/save-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          articleId,
+          article: article
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error('Failed to save article');
+      }
+      
+      // Close the menu after saving
+      setOpenMenuId(null);
+      
+    } catch (error) {
+      console.error('Error saving article:', error);
+      // Revert the UI change if the server request fails
+      setSavedArticles((prev) => ({
+        ...prev,
+        [articleId]: !prev[articleId],
+      }));
+    }
   };
 
+  // Placeholder function for download (no functionality as requested)
   const handleDownload = (e, article) => {
     e.stopPropagation();
     console.log('Download article:', article.title);
@@ -343,9 +388,13 @@ const toggleLike = async (article) => {
                       <div className="menu-dropdown">
                         <div 
                           className="menu-item" 
-                          onClick={(e) => handleSave(e, article)}
+                          onClick={(e) => handleSaveArticle(e, article)}
                         >
-                          <FaBookmark /> Save
+                          {savedArticles[articleId] ? (
+                            <><FaBookmarkSolid color="#187" /> Unsave</>
+                          ) : (
+                            <><FaBookmark /> Save</>
+                          )}
                         </div>
                         <div 
                           className="menu-item" 

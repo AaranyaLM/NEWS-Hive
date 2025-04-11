@@ -1382,6 +1382,76 @@ app.post('/api/share', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to update share count' });
   }
 });
+
+// Save/unsave article endpoint
+app.post('/api/save-article', isAuthenticated, async (req, res) => {
+  try {
+    const { articleId, article } = req.body;
+    const userId = req.session.user.id;
+    
+    // Find existing interaction for this article
+    let interaction = await Interaction.findOne({
+      userId: userId,
+      articleId: articleId
+    });
+    
+    // If no interaction exists yet, create a new one
+    if (!interaction) {
+      interaction = new Interaction({
+        userId: userId,
+        articleId: articleId,
+        saved: true,
+        articleData: article // Store the article data
+      });
+    } else {
+      // Toggle saved status
+      interaction.saved = !interaction.saved;
+      
+      // If saving, update article data
+      if (interaction.saved) {
+        interaction.articleData = article;
+      }
+    }
+    
+    await interaction.save();
+    
+    res.json({ 
+      success: true, 
+      saved: interaction.saved 
+    });
+  } catch (error) {
+    console.error('Error saving article:', error);
+    res.status(500).json({ error: 'Failed to save article' });
+  }
+});
+
+// Fetch saved articles endpoint
+app.get('/api/user/saved-articles', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    // Find all saved articles for this user
+    const savedInteractions = await Interaction.find({
+      userId: userId,
+      saved: true
+    });
+    
+    // Extract article data from the interactions
+    const savedArticles = savedInteractions.map(interaction => 
+      interaction.articleData || { articleId: interaction.articleId }
+    );
+    
+    res.json({ 
+      success: true, 
+      articles: savedArticles 
+    });
+  } catch (error) {
+    console.error('Error fetching saved articles:', error);
+    res.status(500).json({ error: 'Failed to fetch saved articles' });
+  }
+});
+
+
 // For the feeds
 // Protected API routes
 app.get('/api/news', isAuthenticated, (req, res) => {

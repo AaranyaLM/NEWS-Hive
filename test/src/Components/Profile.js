@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
-import Toast from './Toast'; // Import the Toast component
+import Toast from './Toast';
+import { FaBookmark, FaBookmark as FaBookmarkSolid, FaTrash, FaExternalLinkAlt, FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaEllipsisV } from 'react-icons/fa';
 
 function Profile() {
     const [user, setUser] = useState(null);
@@ -12,7 +13,11 @@ function Profile() {
     });
     const [activeTab, setActiveTab] = useState('saved');
     const [userComments, setUserComments] = useState([]);
+    const [savedArticles, setSavedArticles] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [likedArticles, setLikedArticles] = useState({});
+    const [shared, setShared] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null);
     const navigate = useNavigate();
     
     // Toast notification state
@@ -38,14 +43,32 @@ function Profile() {
     };
 
     useEffect(() => {
-        // Load both data sources sequentially
+        // Load all data sources
         const loadProfileData = async () => {
-            await fetchUserProfile();
-            await fetchUserComments();
+            const profileLoaded = await fetchUserProfile();
+            if (profileLoaded) {
+                await Promise.all([
+                    fetchUserComments(),
+                    fetchSavedArticles(),
+                    fetchUserInteractions()
+                ]);
+            }
             setIsLoading(false);
         };
         
         loadProfileData();
+    }, []);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setOpenMenuId(null);
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
     }, []);
 
     const fetchUserProfile = async () => {
@@ -58,17 +81,12 @@ function Profile() {
             
             if (data.success) {
                 setUser(data.user);
-                // Only set articles count, comments will be set from fetchUserComments
-                setUserStats(prev => ({
-                    ...prev,
-                    articles: 12 // Keep your article count logic
-                }));
+                return true;
             } else {
                 // Redirect to login if not authenticated
                 navigate('/userauth');
                 return false;
             }
-            return true;
         } catch (error) {
             console.error('Failed to fetch user profile:', error);
             navigate('/userauth');
@@ -86,7 +104,6 @@ function Profile() {
             
             if (data.success) {
                 setUserComments(data.comments);
-                // Set the comments count based on the actual comments array length
                 setUserStats(prev => ({
                     ...prev,
                     comments: data.comments.length
@@ -96,12 +113,111 @@ function Profile() {
         } catch (error) {
             console.error('Failed to fetch user comments:', error);
             setUserComments([]);
-            // Reset comments count to 0 if fetch fails
             setUserStats(prev => ({
                 ...prev,
                 comments: 0
             }));
             return false;
+        }
+    };
+
+    const fetchSavedArticles = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/user/saved-articles', {
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                setSavedArticles(data.articles);
+                setUserStats(prev => ({
+                    ...prev,
+                    articles: data.articles.length
+                }));
+            }
+            return true;
+        } catch (error) {
+            console.error('Failed to fetch saved articles:', error);
+            setSavedArticles([]);
+            setUserStats(prev => ({
+                ...prev,
+                articles: 0
+            }));
+            return false;
+        }
+    };
+
+    const fetchUserInteractions = async () => {
+        if (!savedArticles.length) return;
+        
+        try {
+            // Create an array of all article IDs to check
+            const articleIds = savedArticles.map(article => generateArticleId(article));
+            
+            // Fetch interactions for these article IDs
+            const response = await fetch('http://localhost:5000/api/user-interactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ articleIds })
+            });
+            
+            const interactions = await response.json();
+            
+            // Convert the array of interactions to objects keyed by articleId
+            const likedArticlesMap = {};
+            
+            interactions.forEach(interaction => {
+                if (interaction.liked) {
+                    likedArticlesMap[interaction.articleId] = true;
+                }
+            });
+            
+            setLikedArticles(likedArticlesMap);
+        } catch (error) {
+            console.error('Error fetching user interactions:', error);
+        }
+    };
+
+    // Handle unsaving an article
+    const handleUnsaveArticle = async (article) => {
+        if (!article || !article.url) return;
+        
+        const articleId = generateArticleId(article);
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/save-article', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    articleId,
+                    article 
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && !data.saved) {
+                // Remove the article from the saved articles list
+                const updatedSavedArticles = savedArticles.filter(
+                    savedArticle => generateArticleId(savedArticle) !== articleId
+                );
+                
+                setSavedArticles(updatedSavedArticles);
+                
+                // Update article count
+                setUserStats(prev => ({
+                    ...prev,
+                    articles: updatedSavedArticles.length
+                }));
+                
+                showToast('Article removed from saved items');
+            }
+        } catch (error) {
+            console.error('Error unsaving article:', error);
+            showToast('Failed to remove article');
         }
     };
 
@@ -114,51 +230,58 @@ function Profile() {
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
 
-    // Generate a consistent article ID, ensuring URLs are properly handled
+    // Toggle menu open/closed
+    const toggleMenu = (e, articleId) => {
+        e.stopPropagation(); // Prevent event bubbling
+        setOpenMenuId(openMenuId === articleId ? null : articleId);
+    };
+
+    // Generate a consistent article ID
     const generateArticleId = (article) => {
         if (!article) return '';
         
-        // If it's already a properly formatted URL, use it directly
         if (article.url && (article.url.startsWith('http://') || article.url.startsWith('https://'))) {
-            return article.url;
+            return encodeURIComponent(article.url);
         }
         
-        // If it's an encoded URL, decode it first to prevent double encoding
         if (article.url && article.url.includes('%')) {
             try {
-                return decodeURIComponent(article.url);
+                return article.url;
             } catch (e) {
-                // If decoding fails, use as is
                 return article.url;
             }
         }
         
-        // Fall back to article ID or empty string
         return article.url || article.articleId || '';
     };
 
+    // Get favicon URL for article source
+    const getFaviconUrl = (url) => {
+        try {
+            const domain = new URL(url).hostname;
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+        } catch {
+            return null;
+        }
+    };
+
     // Handle clicking on a news article - navigate to Content page
-    const handleArticleClick = async (article, e) => {
+    const handleReadMore = async (article, e) => {
         if (!user) return;
         
         if (e) e.preventDefault();
         
-        // Ensure we have valid article data
         if (!article) return;
         
-        // Clean and prepare article object for storage
         const cleanArticle = { ...article };
         
-        // Fix URL if needed before using it as an ID
         const articleId = generateArticleId(article);
         
-        // Make sure the article has the proper URL
-        if (articleId && articleId.startsWith('http')) {
-            cleanArticle.url = articleId;
+        if (articleId && articleId.includes('http')) {
+            cleanArticle.url = decodeURIComponent(articleId);
         }
         
         try {
-            // Track the click (similar to read-more endpoint)
             await fetch('http://localhost:5000/api/read-more', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -167,22 +290,18 @@ function Profile() {
             });
         } catch (error) {
             console.error('Failed to track article view:', error);
-            // Continue even if tracking fails
         }
         
-        // Store clean article in both sessionStorage and localStorage
         sessionStorage.setItem('currentArticle', JSON.stringify(cleanArticle));
         localStorage.setItem('currentArticle', JSON.stringify(cleanArticle));
         
-        // Open content page in new tab
         window.open(`${window.location.origin}/content`, '_blank');
     };
 
-    // Handle comment deletion - UPDATED with Toast notification
+    // Handle comment deletion
     const handleDeleteComment = async (comment) => {
         if (!comment || !comment.articleId || isDeleting) return;
         
-        // Show loading state for this specific comment
         setIsDeleting(true);
         
         try {
@@ -199,7 +318,6 @@ function Profile() {
             const data = await response.json();
             
             if (data.success) {
-                // Remove the deleted comment from the UI
                 const updatedComments = userComments.filter(c => 
                     !(c.articleId === comment.articleId && 
                       c.timestamp === comment.timestamp)
@@ -207,16 +325,13 @@ function Profile() {
                 
                 setUserComments(updatedComments);
                 
-                // Update comment count based on the new array length
                 setUserStats(prev => ({
                     ...prev,
                     comments: updatedComments.length
                 }));
                 
-                // Show toast notification instead of alert
                 showToast('Comment deleted successfully');
             } else {
-                // Show error toast
                 showToast(data.error || 'Failed to delete comment');
             }
         } catch (error) {
@@ -227,54 +342,209 @@ function Profile() {
         }
     };
 
+    // Handle liking an article
+    const toggleLike = async (article) => {
+        if (!user) return;
+      
+        const articleId = generateArticleId(article);
+      
+        // Apply animation class temporarily
+        const likeButtonElement = document.querySelector(`[data-article-id="${articleId}"]`);
+        if (likeButtonElement) {
+            likeButtonElement.classList.add('liked');
+            setTimeout(() => {
+                likeButtonElement.classList.remove('liked');
+            }, 400); // Match animation duration
+        }
+      
+        // Update UI immediately for responsive feel
+        setLikedArticles((prev) => ({
+            ...prev,
+            [articleId]: !prev[articleId],
+        }));
+    
+        try {
+            await fetch('http://localhost:5000/api/like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ articleId }),
+            });
+        } catch (error) {
+            console.error('Error toggling like:', error);
+            // Revert the UI change if the server request fails
+            setLikedArticles((prev) => ({
+                ...prev,
+                [articleId]: !prev[articleId],
+            }));
+        }
+    };
+    
+    // Handle sharing an article
+    const handleShare = async (article) => {
+        if (!user) return;
+        
+        const articleId = generateArticleId(article);
+        await fetch('http://localhost:5000/api/share', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ articleId }),
+        });
+    
+        navigator.clipboard.writeText(article.url);
+        setShared(articleId);
+        setTimeout(() => setShared(null), 2000);
+    };
+
+    const renderSavedArticles = () => {
+        if (savedArticles.length === 0) {
+            return (
+                <div className="no-articles">
+                    <div className="no-content-message">
+                        <FaBookmark size={32} />
+                        <p>You haven't saved any articles yet.</p>
+                        <button 
+                            className="browse-articles-btn"
+                            onClick={() => navigate('/feed')}
+                        >
+                            Browse Articles
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="articles">
+                {savedArticles.map((article, index) => {
+                    const faviconUrl = getFaviconUrl(article.url);
+                    const articleId = generateArticleId(article);
+                    return (
+                        <div key={index} className="article">
+                            <div className="article-header">
+                                <div className="source-info">
+                                    {faviconUrl && <img src={faviconUrl} alt="Source Logo" className="favicon" />}
+                                    <div className="source-details">
+                                        <div className="source">{article.source?.name || 'Unknown Source'}</div>
+                                        <div className="time">{new Date(article.publishedAt).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div className="menu-container">
+                                    <button 
+                                        className="menu-button" 
+                                        onClick={(e) => toggleMenu(e, articleId)}
+                                    >
+                                        <FaEllipsisV />
+                                    </button>
+                                    {openMenuId === articleId && (
+                                        <div className="menu-dropdown">
+                                            <div 
+                                                className="menu-item" 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleUnsaveArticle(article);
+                                                }}
+                                            >
+                                                <FaBookmarkSolid color="#187" /> Unsave
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="article-content">
+                                <h2>{article.title}</h2>
+                                {article.urlToImage && (
+                                    <img 
+                                        src={article.urlToImage} 
+                                        alt={article.title}
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = 'https://via.placeholder.com/150?text=No+Image';
+                                        }}
+                                    />
+                                )}
+                                <p>{article.description}</p>
+                            </div>
+                            <div className="article-actions">
+                                {/* <button 
+                                    onClick={() => toggleLike(article)} 
+                                    className="like-button"
+                                    data-article-id={articleId}
+                                >
+                                    {likedArticles[articleId] ? <FaThumbsUpSolid color="#187" /> : <FaThumbsUp color="#000" />} Like
+                                </button>
+                                <button onClick={() => navigate(`/comments/${articleId}`)} className="comment-button">
+                                    <FaCommentAlt color="#000" /> Comments
+                                </button> */}
+                                <button onClick={() => handleShare(article)} className="share-btn">
+                                    <FaShareAlt color="#000" /> {shared === articleId ? 'Copied!' : 'Share'}
+                                </button>
+                                <button onClick={(e) => handleReadMore(article, e)} className="read-more-button">
+                                    Read More
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    const renderComments = () => {
+        if (userComments.length === 0) {
+            return (
+                <div className="no-comments">
+                    <div className="no-content-message">
+                        <FaTrash size={32} />
+                        <p>You haven't commented on any articles yet.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="comments-list">
+                {userComments.map((comment, index) => (
+                    <div key={`comment-${comment.articleId}-${comment.timestamp}`} className="comment-item">
+                        <div className="comment-header">
+                            <h3 className="article-title" onClick={(e) => handleReadMore(comment.articleData, e)}>
+                                Commented on "{comment.articleData?.title || comment.articleTitle || 'Article'}"
+                            </h3>
+                            <button 
+                                className="delete-comment-btn"
+                                onClick={() => handleDeleteComment(comment)}
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? 'Deleting...' : '×'}
+                            </button>
+                        </div>
+                        <p className="comment-text">{comment.text}</p>
+                        <span className="comment-date">{formatDate(comment.timestamp)}</span>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
     const renderTabContent = () => {
         switch (activeTab) {
             case 'saved':
-                return (
-                    <div className="content-grid">
-                        {[1, 2, 3, 4, 5, 6].map((item) => (
-                            <div key={item} className="grid-item">
-                                <div className="article-thumbnail">
-                                    <div className="placeholder-thumbnail">Saved Article {item}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                );
+                return renderSavedArticles();
             case 'comments':
-                return (
-                    <div className="comments-list">
-                        {userComments.length > 0 ? userComments.map((comment, index) => (
-                            <div key={`comment-${comment.articleId}-${comment.timestamp}`} className="comment-item">
-                                <div className="comment-header">
-                                    <h3 className="article-title" onClick={(e) => handleArticleClick(comment.articleData, e)}>
-                                       Commented on "{comment.articleData?.title || comment.articleTitle || 'Article'}"
-                                    </h3>
-                                    <button 
-                                        className="delete-comment-btn"
-                                        onClick={() => handleDeleteComment(comment)}
-                                        disabled={isDeleting}
-                                    >
-                                        {isDeleting ? 'Deleting...' : '×'}
-                                    </button>
-                                </div>
-                                <p className="comment-text">{comment.text}</p>
-                                <span className="comment-date">{formatDate(comment.timestamp)}</span>
-                            </div>
-                        )) : (
-                            <div className="no-comments">
-                                <p>You haven't commented on any articles yet.</p>
-                            </div>
-                        )}
-                    </div>
-                );
+                return renderComments();
             default:
                 return null;
         }
     };
 
     if (isLoading) {
-        return <div className="loading-spinner">Loading...</div>;
+        return (
+            <div className="content-loader">
+                <div className="loader-pulse"></div>
+                <p>Loading profile...</p>
+            </div>
+        );
     }
 
     return (
@@ -284,7 +554,7 @@ function Profile() {
                 message={toast.message}
                 visible={toast.visible}
                 onHide={hideToast}
-                duration={2000} // Display for 2 seconds
+                duration={2000}
             />
             
             <div className="profile-header">
@@ -316,7 +586,7 @@ function Profile() {
             </div>
             
             <div className="bio-section">
-                <p className="joined-date">Joined {user?.createdAt}</p>
+                <p className="joined-date">Joined {formatDate(user?.createdAt || new Date())}</p>
                 <p className="bio-text">{user?.bio || 'No bio available. Add one to tell others about yourself!'}</p>
             </div>
             
@@ -335,7 +605,9 @@ function Profile() {
                 </div>
             </div>
             
-            {renderTabContent()}
+            <div className="articles-container">
+                {renderTabContent()}
+            </div>
         </div>
     );
 }
