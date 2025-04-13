@@ -363,7 +363,7 @@ const toggleLike = async (article) => {
     }
   };
 
-  // Placeholder function for download (no functionality as requested)
+  // Placeholder function for download (no functionality )
   const handleDownload = (e, article) => {
     e.stopPropagation();
     console.log('Download article:', article.title);

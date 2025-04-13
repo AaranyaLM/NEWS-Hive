@@ -136,7 +136,7 @@
   height: calc(100vh ); /* Subtract the nav bar height from total height */
   background-color: white;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
-  z-index: 0;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   overflow-y: auto; /* Add scroll if content is too long */

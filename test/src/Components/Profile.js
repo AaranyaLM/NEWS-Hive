@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 import Toast from './Toast';
-import { FaBookmark, FaBookmark as FaBookmarkSolid, FaTrash, FaExternalLinkAlt, FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaEllipsisV } from 'react-icons/fa';
+import { FaBookmark, FaBookmark as FaBookmarkSolid,FaDownload, FaTrash, FaExternalLinkAlt, FaThumbsUp, FaThumbsUp as FaThumbsUpSolid, FaShareAlt, FaCommentAlt, FaEllipsisV } from 'react-icons/fa';
 
 function Profile() {
     const [user, setUser] = useState(null);
@@ -70,7 +70,11 @@ function Profile() {
             document.removeEventListener('click', handleClickOutside);
         };
     }, []);
-
+    const handleDownload = (e, article) => {
+        e.stopPropagation();
+        console.log('Download article:', article.title);
+        setOpenMenuId(null);
+      };
     const fetchUserProfile = async () => {
         try {
             const response = await fetch('http://localhost:5000/api/user/profile', {
@@ -448,6 +452,12 @@ function Profile() {
                                             >
                                                 <FaBookmarkSolid color="#187" /> Unsave
                                             </div>
+                                            <div 
+                                                                      className="menu-item" 
+                                                                      onClick={(e) => handleDownload(e, article)}
+                                                                    >
+                                                                      <FaDownload /> Download
+                                                                    </div>
                                         </div>
                                     )}
                                 </div>
