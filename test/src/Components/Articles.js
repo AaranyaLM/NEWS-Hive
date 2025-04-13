@@ -148,7 +148,10 @@ const toggleLike = async (article) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include', // Include cookies for authentication
-      body: JSON.stringify({ articleId }),
+      body: JSON.stringify({ 
+        articleId,
+        article: article // Send the full article object
+      }),
     });
   } catch (error) {
     console.error('Error toggling like:', error);
@@ -217,7 +220,8 @@ const toggleLike = async (article) => {
         credentials: 'include',
         body: JSON.stringify({ 
           articleId,
-          text: commentTextCopy
+          text: commentTextCopy,
+          article: currentArticle // Send the full article object
         }),
       });
       
@@ -269,9 +273,12 @@ const toggleLike = async (article) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include', // Include cookies for authentication
-      body: JSON.stringify({ articleId }),
+      body: JSON.stringify({ 
+        articleId,
+        article: article // Send the full article object
+      }),
     });
-
+  
     navigator.clipboard.writeText(article.url);
     setShared(articleId);
     setTimeout(() => setShared(null), 2000);
@@ -282,14 +289,17 @@ const toggleLike = async (article) => {
     
     e.preventDefault();
     const articleId = generateArticleId(article);
-
+  
     await fetch('http://localhost:5000/api/read-more', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include', // Include cookies for authentication
-      body: JSON.stringify({ articleId }),
+      body: JSON.stringify({ 
+        articleId,
+        article: article // Send the full article object
+      }),
     });
-
+  
     sessionStorage.setItem('currentArticle', JSON.stringify(article));
     localStorage.setItem('currentArticle', JSON.stringify(article));
     window.open(`${window.location.origin}/content`, '_blank');

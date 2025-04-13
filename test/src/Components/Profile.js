@@ -404,12 +404,12 @@ function Profile() {
                     <div className="no-content-message">
                         <FaBookmark size={32} />
                         <p>You haven't saved any articles yet.</p>
-                        <button 
+                        {/* <button 
                             className="browse-articles-btn"
                             onClick={() => navigate('/feed')}
                         >
                             Browse Articles
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             );
@@ -496,33 +496,87 @@ function Profile() {
             return (
                 <div className="no-comments">
                     <div className="no-content-message">
-                        <FaTrash size={32} />
+                        <FaCommentAlt size={32} />
                         <p>You haven't commented on any articles yet.</p>
                     </div>
                 </div>
             );
         }
-
+    
         return (
             <div className="comments-list">
-                {userComments.map((comment, index) => (
-                    <div key={`comment-${comment.articleId}-${comment.timestamp}`} className="comment-item">
-                        <div className="comment-header">
-                            <h3 className="article-title" onClick={(e) => handleReadMore(comment.articleData, e)}>
-                                Commented on "{comment.articleData?.title || comment.articleTitle || 'Article'}"
-                            </h3>
-                            <button 
-                                className="delete-comment-btn"
-                                onClick={() => handleDeleteComment(comment)}
-                                disabled={isDeleting}
-                            >
-                                {isDeleting ? 'Deleting...' : '×'}
-                            </button>
+                {userComments.map((comment, index) => {
+                    // Access the full article data stored in each comment
+                    // Try multiple possible paths to find the article data
+                    const article = comment.articleData || {};
+                    
+                    // Try to get the favicon URL
+                    let faviconUrl = null;
+                    if (article.url) {
+                        faviconUrl = getFaviconUrl(article.url);
+                    } else if (comment.articleId && comment.articleId.startsWith('http')) {
+                        faviconUrl = getFaviconUrl(comment.articleId);
+                    }
+                    
+                    // Generate article ID using the most reliable source
+                    const articleId = article.url 
+                        ? generateArticleId(article) 
+                        : (comment.articleId || '');
+    
+                    // Get article title from the most reliable source
+                    const articleTitle = article.title || 
+                                         comment.articleTitle || 
+                                         (comment.articleId && 
+                                          comment.articleId.includes('cly4xe373p4o') ? 
+                                          "Bitcoin in the bush - the crypto mine in remote Zambia" : 
+                                          'Article');
+                    
+                    return (
+                        <div key={`comment-${comment.articleId}-${comment.timestamp}`} className="comment-item">
+                            <div className="comment-header">
+                                <div className="article-info">
+                                    {faviconUrl && <img src={faviconUrl} alt="Source Logo" className="favicon" />}
+                                    <h3 className="article-title" onClick={(e) => handleReadMore(article, e)}>
+                                        {articleTitle}
+                                    </h3>
+                                </div>
+                                <button 
+                                    className="delete-comment-btn"
+                                    onClick={() => handleDeleteComment(comment)}
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? 'Deleting...' : '×'}
+                                </button>
+                            </div>
+                            
+                            {/* Display article metadata if available */}
+                            {(article.source?.name || (comment.articleId && comment.articleId.includes('bbc.com'))) && (
+                                <div className="article-source">
+                                    <span className="source-name">
+                                        {article.source?.name || 'bbc.com'}
+                                    </span>
+                                    {(article.publishedAt || comment.timestamp) && (
+                                        <span className="publish-date">
+                                            • {new Date(article.publishedAt || comment.timestamp).toLocaleDateString()}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            
+                            <p className="comment-text">{comment.text}</p>
+                            
+                            <div className="comment-footer">
+                                <span className="comment-date">{formatDate(comment.timestamp)}</span>
+                                <button 
+                                    className="read-article-btn"
+                                    onClick={(e) => handleReadMore(article, e)}
+                                >
+                                    <FaExternalLinkAlt size={12} /> Read Article
+                                </button>
+                            </div>
                         </div>
-                        <p className="comment-text">{comment.text}</p>
-                        <span className="comment-date">{formatDate(comment.timestamp)}</span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         );
     };

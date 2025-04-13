@@ -991,20 +991,31 @@ mongoose.connect('mongodb://localhost:27017/news_hive', {
 // Like an article
 app.post('/api/like', isAuthenticated, async (req, res) => {
   try {
-    const { articleId } = req.body;
+    const { articleId, article } = req.body;  // Add article to the request
     const userId = req.session.user.id;
     
     // Find the existing interaction
-    const existingInteraction = await Interaction.findOne({ articleId, userId });
+    let interaction = await Interaction.findOne({ articleId, userId });
     
-    // Toggle the liked state - if it exists and is liked, set to false; otherwise set to true
-    const newLikedState = existingInteraction ? !existingInteraction.liked : true;
+    if (!interaction) {
+      // Create new interaction with article data if none exists
+      interaction = new Interaction({
+        userId: userId,
+        articleId: articleId,
+        liked: true,
+        articleData: article  // Store the full article data
+      });
+    } else {
+      // Toggle liked status
+      interaction.liked = !interaction.liked;
+      
+      // Always update article data when provided
+      if (article) {
+        interaction.articleData = article;
+      }
+    }
     
-    const interaction = await Interaction.findOneAndUpdate(
-      { articleId, userId },
-      { liked: newLikedState },
-      { upsert: true, new: true }
-    );
+    await interaction.save();
     
     res.json(interaction);
   } catch (error) {
@@ -1073,32 +1084,53 @@ app.get('/api/comments/:articleId', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch comments' });
   }
 });
-  app.post('/api/comment', isAuthenticated, async (req, res) => {
-    try {
-      const { articleId, text } = req.body;
-      const userId = req.session.user.id;
-      const username = req.session.user.username;
+app.post('/api/comment', isAuthenticated, async (req, res) => {
+  try {
+    const { articleId, text, article } = req.body;  // Add article to the request
+    const userId = req.session.user.id;
+    const username = req.session.user.username;
+    
+    // Find the existing interaction
+    let interaction = await Interaction.findOne({ articleId, userId });
+    
+    if (!interaction) {
+      // Create new interaction if none exists
+      interaction = new Interaction({
+        userId: userId,
+        articleId: articleId,
+        comments: [{
+          text,
+          timestamp: new Date(),
+          username
+        }],
+        articleData: article  // Store the full article data
+      });
+    } else {
+      // Add new comment
+      if (!interaction.comments) {
+        interaction.comments = [];
+      }
       
-      const interaction = await Interaction.findOneAndUpdate(
-        { articleId, userId }, // Add userId to the query to get the user's specific interaction
-        { 
-          $push: { 
-            comments: { 
-              text, 
-              timestamp: new Date(), 
-              username 
-            } 
-          } 
-        },
-        { upsert: true, new: true }
-      );
+      interaction.comments.push({
+        text,
+        timestamp: new Date(),
+        username
+      });
       
-      res.json(interaction);
-    } catch (error) {
-      console.error('Error posting comment:', error);
-      res.status(500).json({ error: 'Failed to post comment' });
+      // Always update article data when provided
+      if (article) {
+        interaction.articleData = article;
+      }
     }
-  });
+    
+    await interaction.save();
+    
+    res.json(interaction);
+  } catch (error) {
+    console.error('Error posting comment:', error);
+    res.status(500).json({ error: 'Failed to post comment' });
+  }
+});
 
   app.get('/api/debug/all-comments', async (req, res) => {
     try {
@@ -1242,12 +1274,24 @@ app.get('/api/user/comments', isAuthenticated, async (req, res) => {
     
     for (const int of interactions) {
       if (int.comments && int.comments.length > 0) {
-        const articleData = articleDataMap[int.articleId];
+        // Check if the interaction has articleData directly
+        let articleData = int.articleData || articleDataMap[int.articleId] || {};
+        
+        // If articleData is nested inside the interaction
+        if (!articleData.title && int.articleData) {
+          articleData = {
+            title: int.articleData.title,
+            url: int.articleData.url || decodeURIComponent(int.articleId),
+            source: int.articleData.source,
+            publishedAt: int.articleData.publishedAt,
+            urlToImage: int.articleData.urlToImage
+          };
+        }
         
         for (const comment of int.comments) {
           userComments.push({
             articleId: int.articleId,
-            articleTitle: articleData.title,
+            articleTitle: articleData.title || extractTitleFromUrl(decodeURIComponent(int.articleId)),
             articleData: articleData,
             text: comment.text,
             timestamp: comment.timestamp,
@@ -1347,14 +1391,31 @@ app.delete('/api/user/comments/delete', isAuthenticated, async (req, res) => {
 // Track Read More Clicks
 app.post('/api/read-more', isAuthenticated, async (req, res) => {
   try {
-    const { articleId } = req.body;
+    const { articleId, article } = req.body;  // Add article to the request
     const userId = req.session.user.id;
     
-    const interaction = await Interaction.findOneAndUpdate(
-      { articleId, userId },
-      { readMore: true },
-      { upsert: true, new: true }
-    );
+    // Find the existing interaction
+    let interaction = await Interaction.findOne({ articleId, userId });
+    
+    if (!interaction) {
+      // Create new interaction if none exists
+      interaction = new Interaction({
+        userId: userId,
+        articleId: articleId,
+        readMore: true,
+        articleData: article  // Store the full article data
+      });
+    } else {
+      // Set readMore to true
+      interaction.readMore = true;
+      
+      // Always update article data when provided
+      if (article) {
+        interaction.articleData = article;
+      }
+    }
+    
+    await interaction.save();
     
     res.json(interaction);
   } catch (error) {
@@ -1365,16 +1426,31 @@ app.post('/api/read-more', isAuthenticated, async (req, res) => {
 //Share API endpoint
 app.post('/api/share', isAuthenticated, async (req, res) => {
   try {
-    const { articleId } = req.body;
+    const { articleId, article } = req.body;  // Add article to the request
     const userId = req.session.user.id;
     
-    // Find the existing interaction or create a new one
-    const interaction = await Interaction.findOneAndUpdate(
-      { articleId, userId },
-      // Increment the shares field by 1
-      { $inc: { shares: 1 } },
-      { upsert: true, new: true }
-    );
+    // Find the existing interaction
+    let interaction = await Interaction.findOne({ articleId, userId });
+    
+    if (!interaction) {
+      // Create new interaction if none exists
+      interaction = new Interaction({
+        userId: userId,
+        articleId: articleId,
+        shares: 1,
+        articleData: article  // Store the full article data
+      });
+    } else {
+      // Increment shares
+      interaction.shares = (interaction.shares || 0) + 1;
+      
+      // Always update article data when provided
+      if (article) {
+        interaction.articleData = article;
+      }
+    }
+    
+    await interaction.save();
     
     res.json(interaction);
   } catch (error) {
@@ -1382,7 +1458,6 @@ app.post('/api/share', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to update share count' });
   }
 });
-
 // Save/unsave article endpoint
 app.post('/api/save-article', isAuthenticated, async (req, res) => {
   try {
