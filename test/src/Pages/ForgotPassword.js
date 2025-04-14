@@ -2,14 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserAuth.css';
 import logo from '../Images/Logo.png';
+import Toast from '../Components/Toast'; 
 
 function ForgotPassword() {
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [step, setStep] = useState('request'); // 'request', 'verification', 'reset'
     const navigate = useNavigate();
+    
+    // Toast state
+    const [toast, setToast] = useState({
+        message: '',
+        visible: false
+    });
     
     // Verification and reset state
     const [verificationData, setVerificationData] = useState({
@@ -22,6 +27,22 @@ function ForgotPassword() {
         password: '',
         confirmPassword: ''
     });
+    
+    const showToast = (message, duration = 3000) => {
+        setToast({
+            message,
+            visible: true
+        });
+        
+        // Toast will auto-hide based on the component's useEffect
+    };
+    
+    const hideToast = () => {
+        setToast(prev => ({
+            ...prev,
+            visible: false
+        }));
+    };
     
     // Handle email input change
     const handleEmailChange = (e) => {
@@ -49,8 +70,6 @@ function ForgotPassword() {
     const handleRequestReset = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setError('');
-        setSuccess('');
         
         try {
             const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
@@ -77,12 +96,12 @@ function ForgotPassword() {
             
             // Show verification step
             setStep('verification');
-            setSuccess('A verification code has been sent to your email.');
+            showToast('A verification code has been sent to your email.');
             
             // Reset form
             setEmail('');
         } catch (error) {
-            setError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -92,8 +111,6 @@ function ForgotPassword() {
     const handleVerifyCode = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setError('');
-        setSuccess('');
         
         try {
             const response = await fetch('http://localhost:5000/api/auth/verify-reset-code', {
@@ -116,7 +133,7 @@ function ForgotPassword() {
             
             // Move to reset password step
             setStep('reset');
-            setSuccess('Code verified. You can now reset your password.');
+            showToast('Code verified. You can now reset your password.');
             
             // Reset verification form
             setVerificationData({
@@ -124,7 +141,7 @@ function ForgotPassword() {
                 verificationCode: ''
             });
         } catch (error) {
-            setError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -134,11 +151,10 @@ function ForgotPassword() {
     const handleResetPassword = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setError('');
         
         // Check if passwords match
         if (newPassword.password !== newPassword.confirmPassword) {
-            setError('Passwords do not match');
+            showToast('Passwords do not match');
             setIsLoading(false);
             return;
         }
@@ -163,13 +179,13 @@ function ForgotPassword() {
             }
             
             // Show success and redirect to login after a delay
-            setSuccess('Password reset successful! Redirecting to login...');
+            showToast('Password reset successful! Redirecting to login...');
             
             setTimeout(() => {
                 navigate('/userauth');
             }, 2000);
         } catch (error) {
-            setError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -178,7 +194,6 @@ function ForgotPassword() {
     // Handle resend verification code
     const handleResendCode = async () => {
         setIsLoading(true);
-        setError('');
         
         try {
             const response = await fetch('http://localhost:5000/api/auth/resend-reset-code', {
@@ -205,12 +220,9 @@ function ForgotPassword() {
             });
             
             // Show success message
-            setSuccess('Verification code sent to your email.');
-            setTimeout(() => {
-                setSuccess('');
-            }, 3000);
+            showToast('Verification code sent to your email.');
         } catch (error) {
-            setError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -224,6 +236,12 @@ function ForgotPassword() {
     return (
         <div id="user-auth-container">
             <div id="blur-overlay"></div>
+            <Toast 
+                message={toast.message}
+                visible={toast.visible}
+                onHide={hideToast}
+                duration={3000}
+            />
             <div className="content justify-content-center align-items-center d-flex shadow-lg">
                 {/* Left side form */}
                 <div className="col-md-6 d-flex justify-content-center">
@@ -231,8 +249,6 @@ function ForgotPassword() {
                         <form onSubmit={handleRequestReset}>
                             <div className="header-text mb-4">
                                 <h1>Forgot Password</h1>
-                                {error && <div className="alert alert-danger">{error}</div>}
-                                {success && <div className="alert alert-success">{success}</div>}
                             </div>
                             <p className="text-center mb-4">Enter your email address and we'll send you a verification code to reset your password.</p>
                             <div className="input-group mb-3">
@@ -271,8 +287,6 @@ function ForgotPassword() {
                         <form onSubmit={handleVerifyCode}>
                             <div className="header-text mb-4">
                                 <h1>Verify Code</h1>
-                                {error && <div className="alert alert-danger">{error}</div>}
-                                {success && <div className="alert alert-success">{success}</div>}
                             </div>
                             <p className="text-center mb-4">Enter the verification code sent to your email.</p>
                             <div className="input-group mb-3">
@@ -321,8 +335,6 @@ function ForgotPassword() {
                         <form onSubmit={handleResetPassword}>
                             <div className="header-text mb-4">
                                 <h1>Reset Password</h1>
-                                {error && <div className="alert alert-danger">{error}</div>}
-                                {success && <div className="alert alert-success">{success}</div>}
                             </div>
                             <p className="text-center mb-4">Enter your new password.</p>
                             <div className="input-group mb-3">
@@ -378,8 +390,6 @@ function ForgotPassword() {
                         <p className="text-black text-center"></p>
                     </div>
                 </div>
-
-                {/* We don't need the switch content for the forgot password page */}
             </div>
         </div>
     );

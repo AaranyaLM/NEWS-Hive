@@ -1,4 +1,3 @@
-// Toast.js
 import React, { useState, useEffect } from 'react';
 import './Toast.css';
 

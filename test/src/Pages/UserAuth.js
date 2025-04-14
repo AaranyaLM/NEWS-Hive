@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserAuth.css';
 import logo from '../Images/WhiteLogo.png';
+import Toast from '../Components/Toast'; // Import the Toast component
 
 function UserAuth() {
     const [isActive, setIsActive] = useState(false);
@@ -28,22 +29,37 @@ function UserAuth() {
         email: ''
     });
     
+    // Toast state
+    const [toast, setToast] = useState({
+        message: '',
+        visible: false
+    });
+    
     // Error and loading states
-    const [registerError, setRegisterError] = useState('');
-    const [loginError, setLoginError] = useState('');
-    const [verificationError, setVerificationError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [registerSuccess, setRegisterSuccess] = useState(false);
-    const [verificationSuccess, setVerificationSuccess] = useState(false);
+
+    const showToast = (message, duration = 3000) => {
+        setToast({
+            message,
+            visible: true
+        });
+        
+        // Toast will auto-hide based on the component's useEffect
+    };
+    
+    const hideToast = () => {
+        setToast(prev => ({
+            ...prev,
+            visible: false
+        }));
+    };
 
     const switchToRegister = () => {
         setIsActive(true);
-        setLoginError('');
     };
 
     const switchToLogin = () => {
         setIsActive(false);
-        setRegisterError('');
         setVerificationStep(false);
     };
     
@@ -77,7 +93,6 @@ function UserAuth() {
     const handleRegisterSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setRegisterError('');
         
         try {
             const response = await fetch('http://localhost:5000/api/auth/register', {
@@ -104,7 +119,7 @@ function UserAuth() {
             
             // Show verification step
             setVerificationStep(true);
-            setRegisterSuccess(true);
+            showToast('Registration successful! Please check your email for verification code.');
             
             // Reset form
             setRegisterData({
@@ -112,11 +127,8 @@ function UserAuth() {
                 email: '',
                 password: ''
             });
-            setTimeout(() => {
-                setRegisterSuccess(false);
-            }, 4000);
         } catch (error) {
-            setRegisterError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -126,7 +138,6 @@ function UserAuth() {
     const handleVerificationSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setVerificationError('');
         
         try {
             const response = await fetch('http://localhost:5000/api/auth/verify', {
@@ -148,7 +159,7 @@ function UserAuth() {
             }
             
             // Show verification success
-            setVerificationSuccess(true);
+            showToast('Email verified successfully! You can now log in.');
             
             // Reset verification form
             setVerificationData({
@@ -156,14 +167,13 @@ function UserAuth() {
                 verificationCode: ''
             });
             
-            // Switch to login after 3 seconds
+            // Switch to login after 1.5 seconds
             setTimeout(() => {
                 setVerificationStep(false);
                 setIsActive(false);
-                setVerificationSuccess(false);
             }, 1500);
         } catch (error) {
-            setVerificationError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -172,7 +182,6 @@ function UserAuth() {
     // Handle resend verification code
     const handleResendCode = async () => {
         setIsLoading(true);
-        setVerificationError('');
         
         try {
             const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
@@ -199,12 +208,9 @@ function UserAuth() {
             });
             
             // Show success message
-            setRegisterSuccess(true);
-            setTimeout(() => {
-                setRegisterSuccess(false);
-            }, 3000);
+            showToast('Verification code sent to your email.');
         } catch (error) {
-            setVerificationError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -214,7 +220,6 @@ function UserAuth() {
     const handleLoginSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setLoginError('');
         
         try {
             const response = await fetch('http://localhost:5000/api/auth/login', {
@@ -246,9 +251,12 @@ function UserAuth() {
             }
             
             // Login successful, redirect to homepage
-            navigate('/');
+            showToast('Login successful! Redirecting...');
+            setTimeout(() => {
+                navigate('/');
+            }, 1000);
         } catch (error) {
-            setLoginError(error.message);
+            showToast(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -260,6 +268,12 @@ function UserAuth() {
     return (
         <div id="user-auth-container">
             <div id="blur-overlay"></div>
+            <Toast 
+                message={toast.message}
+                visible={toast.visible}
+                onHide={hideToast}
+                duration={3000}
+            />
             <div className={`content justify-content-center align-items-center d-flex shadow-lg ${isActive ? "active" : ""}`} id='content'>
                 {/* Registration */}
                 <div className='col-md-6 d-flex justify-content-center'>
@@ -267,8 +281,6 @@ function UserAuth() {
                         <form onSubmit={handleRegisterSubmit}>
                             <div className="header-text mb-4">
                                 <h1>Create Account</h1>
-                                {registerError && <div className="alert alert-danger">{registerError}</div>}
-                                {registerSuccess && <div className="alert alert-success">Registration successful! Please check your email for verification code.</div>}
                             </div>
                             <div className='input-group mb-3'>
                                 <input 
@@ -325,9 +337,6 @@ function UserAuth() {
                         <form onSubmit={handleVerificationSubmit}>
                             <div className="header-text mb-4">
                                 <h1>Verify Your Email</h1>
-                                {verificationError && <div className="alert alert-danger">{verificationError}</div>}
-                                {verificationSuccess && <div className="alert alert-success">Email verified successfully! You can now log in.</div>}
-                                {registerSuccess && <div className="alert alert-success">Verification code sent to your email.</div>}
                             </div>
                             <p className="text-center mb-4">We've sent a verification code to your email. Please enter it below to activate your account.</p>
                             <div className='input-group mb-3'>
@@ -377,9 +386,7 @@ function UserAuth() {
                 <div className='col-md-6 right-box'>
                     <form onSubmit={handleLoginSubmit}>
                         <div className="header-text mb-4">
-                        {verificationSuccess && <div className="alert alert-success">Email verified successfully! You can now log in.</div>}
                             <h1>Log In</h1>
-                            {loginError && <div className="alert alert-danger">{loginError}</div>}
                         </div>
                         <div className='input-group mb-3'>
                             <input 
@@ -444,9 +451,6 @@ function UserAuth() {
                         </div>
                     </div>
                 </div>
-                
-              
-                
             </div>
         </div>
     );
