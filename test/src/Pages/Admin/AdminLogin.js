@@ -81,7 +81,7 @@ export default function AdminLogin() {
       if (res.data.success) {
         showToast('Login successful! Redirecting...');
         setTimeout(() => {
-          window.location.href = '/admin-panel';
+          window.location.href = '/admin/panel';
         }, 1500);
       } else {
         showToast('Invalid code. Please try again.', 'error');

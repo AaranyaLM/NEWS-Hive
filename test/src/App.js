@@ -13,6 +13,7 @@ import UserProfile from './Components/UserProfile';
 import AdminLogin from './Pages/Admin/AdminLogin';
 import AdminPanel from './Pages/Admin/AdminPanel';
 import AdminUsers from './Pages/Admin/AdminUsers';
+import AdminComments from './Pages/Admin/AdminComments';
 function App() {
   return (
     <Router>
@@ -20,6 +21,7 @@ function App() {
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/panel" element={<AdminPanel />} />
       <Route path="/admin/users" element={<AdminUsers />} />
+      <Route path="/admin/comments" element={<AdminComments />} />
         <Route path="/userauth" element={<UserAuth />} />
         <Route path="/forgot" element={<ForgotPassword />} /> 
         <Route path="/" element={

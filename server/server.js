@@ -1865,3 +1865,195 @@ app.get('/admin/users/:id', requireAdmin, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch user' });
   }
 });
+
+// For MySQL user stats
+app.get('/api/admin/stats/users', requireAdmin, async (req, res) => {
+  try {
+    // Using your MySQL connection (adjust based on your actual DB setup)
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM users');
+    res.json({ count: rows[0].count });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Failed to fetch user statistics' });
+  }
+});
+
+// For MongoDB comment stats - Updated for your schema
+app.get('/api/admin/stats/comments', requireAdmin, async (req, res) => {
+  try {
+    // Count all documents that have at least one comment
+    const commentsCount = await Interaction.aggregate([
+      { $match: { "comments.0": { $exists: true } } },
+      { $project: { commentCount: { $size: "$comments" } } },
+      { $group: { _id: null, totalComments: { $sum: "$commentCount" } } }
+    ]);
+
+    // If no documents with comments exist, return 0
+    const count = commentsCount.length > 0 ? commentsCount[0].totalComments : 0;
+    res.json({ count });
+  } catch (error) {
+    console.error('Error fetching comment stats:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch comment statistics', 
+      details: error.message
+    });
+  }
+});
+
+// For likes made today - Updated for your schema
+app.get('/api/admin/stats/likes-today', requireAdmin, async (req, res) => {
+  try {
+    // Get today's date at midnight in UTC
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Count interactions with likes that were created or updated today
+    const count = await Interaction.countDocuments({
+      liked: true,
+      updatedAt: { $gte: today }
+    });
+    
+    res.json({ count });
+  } catch (error) {
+    console.error('Error fetching today\'s likes:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch likes statistics', 
+      details: error.message
+    });
+  }
+});
+
+// Add a new endpoint for saved articles count
+app.get('/api/admin/stats/saved', requireAdmin, async (req, res) => {
+  try {
+    const count = await Interaction.countDocuments({ saved: true });
+    res.json({ count });
+  } catch (error) {
+    console.error('Error fetching saved articles stats:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch saved articles statistics', 
+      details: error.message
+    });
+  }
+});
+
+// Get all comments for admin
+app.get('/api/admin/comments', requireAdmin, async (req, res) => {
+  try {
+    // Find all interactions that have at least one comment
+    const interactions = await Interaction.find({ 
+      "comments.0": { $exists: true } 
+    });
+
+    // Prepare an array to hold all comments
+    const allComments = [];
+
+    // Process each interaction to extract comments with user details
+    for (const interaction of interactions) {
+      // For each comment in this interaction
+      for (const comment of interaction.comments) {
+        // Get the username for this comment
+        let username = comment.username; // Use username stored with comment if available
+        
+        // If username is not stored with comment, fetch from the user table
+        if (!username && interaction.userId) {
+          try {
+            const [userRows] = await pool.execute(
+              'SELECT username FROM users WHERE id = ?',
+              [interaction.userId]
+            );
+            
+            if (userRows.length > 0) {
+              username = userRows[0].username;
+            } else {
+              username = 'Unknown User';
+            }
+          } catch (error) {
+            console.error('Error fetching username:', error);
+            username = 'Unknown User';
+          }
+        }
+
+        // Add this comment to the allComments array
+        allComments.push({
+          articleId: interaction.articleId,
+          articleData: interaction.articleData,
+          text: comment.text,
+          timestamp: comment.timestamp,
+          username: username || 'Unknown User',
+          userId: interaction.userId
+        });
+      }
+    }
+
+    // Sort comments by timestamp (newest first)
+    allComments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    res.json({
+      success: true,
+      comments: allComments
+    });
+  } catch (error) {
+    console.error('Error fetching all comments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch comments'
+    });
+  }
+});
+
+// Delete comment (admin endpoint)
+app.delete('/api/admin/comments/delete', requireAdmin, async (req, res) => {
+  try {
+    const { articleId, userId, timestamp } = req.body;
+    
+    // Validate required fields
+    if (!articleId || !timestamp) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields'
+      });
+    }
+    
+    // Find the interaction with the comment
+    const interaction = await Interaction.findOne({ 
+      articleId,
+      userId
+    });
+    
+    if (!interaction) {
+      return res.status(404).json({
+        success: false,
+        error: 'Comment not found'
+      });
+    }
+    
+    // Filter out the comment to be deleted
+    const originalCommentsCount = interaction.comments.length;
+    interaction.comments = interaction.comments.filter(
+      comment => new Date(comment.timestamp).getTime() !== new Date(timestamp).getTime()
+    );
+    
+    // Check if any comment was removed
+    if (interaction.comments.length === originalCommentsCount) {
+      return res.status(404).json({
+        success: false,
+        error: 'Comment not found'
+      });
+    }
+    
+    // Save the updated interaction
+    await interaction.save();
+    
+    res.json({
+      success: true,
+      message: 'Comment deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete comment'
+    });
+  }
+});

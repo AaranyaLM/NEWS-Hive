@@ -1,0 +1,248 @@
+.admin-comments-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-left: calc(250px + 20px); 
+  }
+  
+  .admin-content-header {
+    margin-bottom: 24px;
+  }
+  
+  .admin-content-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  .admin-content-header p {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .admin-search-controls {
+    display: flex;
+    flex-direction: column;
+    background: #f7f9fc;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-input-wrapper {
+    position: relative;
+    margin-bottom: 12px;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    color: #999;
+  }
+  
+  .admin-search-input {
+    width: 100%;
+    padding: 10px 10px 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  
+  .admin-search-input:focus {
+    border-color: #4a90e2;
+    outline: none;
+  }
+  
+  .search-filter-options {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .search-filter-options label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .search-filter-options input[type="radio"] {
+    margin: 0;
+  }
+  
+  .admin-content-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    /* Add padding to account for the navbar */
+    padding-top: 70px;
+  }
+  
+  .loader-pulse {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #4a90e2;
+    animation: pulse 1.2s infinite;
+    margin-bottom: 16px;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+  }
+  
+  .no-comments-found {
+    text-align: center;
+    padding: 60px 0;
+    color: #666;
+  }
+  
+  .no-content-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .no-content-message svg {
+    color: #ccc;
+  }
+  
+  .admin-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .comments-count {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  
+  .admin-comment-item {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .admin-comment-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  
+  .article-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .favicon {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+  }
+  
+  .article-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+  
+  .article-source {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 10px;
+  }
+  
+  .delete-comment-btn {
+    background: none;
+    border: none;
+    color: #ff4d4f;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  
+  .delete-comment-btn:hover {
+    background-color: rgba(255, 77, 79, 0.1);
+  }
+  
+  .delete-comment-btn:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .commenter-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    background-color: #f3f3f3;
+    border-radius: 6px;
+    width: fit-content;
+  }
+  
+  .user-icon {
+    color: #666;
+    font-size: 12px;
+  }
+  
+  .commenter-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #444;
+  }
+  
+  .comment-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 12px;
+    word-break: break-word;
+  }
+  
+  .comment-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #888;
+  }
+  
+  .comment-date {
+    font-style: italic;
+  }
