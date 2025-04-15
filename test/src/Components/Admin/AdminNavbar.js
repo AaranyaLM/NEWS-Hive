@@ -40,7 +40,7 @@ export default function AdminNavbar() {
       <nav className="admin-sidebar desktop-only">
         <div className="admin-sidebar-container">
           <div className="admin-sidebar-logo">
-            <h2>🛠️ Admin Panel</h2>
+            <h2>Admin Panel</h2>
           </div>
           
           <div className="admin-sidebar-links">

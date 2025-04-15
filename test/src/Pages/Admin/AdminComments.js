@@ -177,6 +177,7 @@ function AdminComments() {
                 />
             </div>
             <div className="search-filter-options">
+                <label>Search by:</label>
                 <label>
                     <input
                         type="radio"

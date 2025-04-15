@@ -50,6 +50,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Set up session middleware
 app.use(session({
+  name: 'admin_session',
   key: 'session_cookie_name',
   secret: 'session_cookie_secret', // Use a strong secret in production
   store: sessionStore,
@@ -1664,6 +1665,7 @@ app.use(cors({
 
 // Configure session middleware
 app.use(session({
+   name: 'user_session',
   secret: 'super_secret_news_hive_key', // Move to environment variable in production
   resave: false,
   saveUninitialized: false, // Changed to false for better security
