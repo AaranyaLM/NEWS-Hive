@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminNavbar from '../../Components/Admin/AdminNavbar';
 import './AdminPanel.css';
+import Logo from '../../Images/Logo.png';
+
 
 export default function AdminPanel() {
   const [authorized, setAuthorized] = useState(null);
@@ -31,9 +33,19 @@ export default function AdminPanel() {
       {/* Main Content Area */}
       <div className="admin-content">
         <div className="admin-dashboard">
-          <h1>News Hive Admin Panel</h1>
+        <div className="admin-header">
+          <div className='header-item'>
+          <img src={Logo} alt="News Hive Logo" className="admin-logo" />
+          </div>
+          <div className='header-item'>
+          <h1>Admin Dashboard</h1>
           <p>Welcome, Admin! You now have access to manage the site.</p>
-          
+          </div>
+
+ 
+</div>
+
+
           <div className="admin-stats-grid">
             <div className="admin-stat-card">
               <h3>Articles</h3>

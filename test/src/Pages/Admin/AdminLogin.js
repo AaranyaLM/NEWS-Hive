@@ -25,7 +25,7 @@ export default function AdminLogin() {
       try {
         const res = await axios.get('http://localhost:5000/check-admin-session');
         if (res.data.isAdmin) {
-          window.location.href = '/admin-panel';
+          window.location.href = '/admin/panel';
         }
       } catch (err) {
         // Not logged in, continue with login page

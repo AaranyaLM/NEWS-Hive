@@ -61,6 +61,19 @@
     color: #666;
     font-size: 0.9rem;
   }
+
+  .admin-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .admin-logo {
+    width: 150px;
+    height: auto;
+  }
+  
   
   /* Loading and Error States */
   .admin-loading, .admin-denied {
