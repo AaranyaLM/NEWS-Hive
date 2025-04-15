@@ -1525,7 +1525,65 @@ app.get('/api/user/saved-articles', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch saved articles' });
   }
 });
+// Add these endpoints to your server.js or routes file
 
+// Get count of saved articles for the user
+app.get('/api/user/saved-articles/count', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    // Count all saved articles for this user
+    const count = await Interaction.countDocuments({
+      userId: userId,
+      saved: true
+    });
+    
+    res.json({ 
+      success: true, 
+      count: count
+    });
+  } catch (error) {
+    console.error('Error counting saved articles:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to count saved articles',
+      message: error.message
+    });
+  }
+});
+
+// Get count of comments from the user
+app.get('/api/user/comments/count', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    // Find all interactions that have comments from this user
+    const interactions = await Interaction.find({
+      userId: userId,
+      'comments.0': { $exists: true } // Only get interactions with at least one comment
+    });
+    
+    // Count all comments (one interaction might have multiple comments)
+    let commentCount = 0;
+    for (const interaction of interactions) {
+      if (interaction.comments && Array.isArray(interaction.comments)) {
+        commentCount += interaction.comments.length;
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      count: commentCount
+    });
+  } catch (error) {
+    console.error('Error counting user comments:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to count user comments',
+      message: error.message
+    });
+  }
+});
 
 // For the feeds
 // Protected API routes

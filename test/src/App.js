@@ -8,6 +8,7 @@ import ForgotPassword from './Pages/ForgotPassword';
 import ProtectedRoute from './Components/ProtectedRoute';
 import Profile from './Pages/Profilepage';
 import EditProfilepage from './Pages/EditProfilepage';
+import SavedArticlePage from './Pages/SavedArticlePage';
 
 function App() {
   return (
@@ -39,6 +40,11 @@ function App() {
           <ProtectedRoute>
             <EditProfilepage />
           </ProtectedRoute>
+        } />
+          <Route path="/saved" element={
+          <SavedArticlePage>
+            <EditProfilepage />
+          </SavedArticlePage>
         } />
       </Routes>
     </Router>

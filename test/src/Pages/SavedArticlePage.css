@@ -1,0 +1,102 @@
+.saved-article-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.saved-article-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-left h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    color: #333;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #555;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: #eaeaea;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.profile-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.profile-button:hover {
+    background-color: #f0f0f0;
+}
+
+.profile-button span {
+    font-weight: 500;
+}
+
+.saved-article-content {
+    padding: 10px 0;
+}
+
+.saved-articles-description {
+    margin-bottom: 24px;
+    color: #666;
+    line-height: 1.5;
+    font-size: 1rem;
+    padding: 0 10px;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .saved-article-page {
+        padding: 10px;
+    }
+    
+    .header-left h1 {
+        font-size: 1.5rem;
+    }
+    
+    .profile-button span {
+        display: none; /* Hide username on small screens */
+    }
+    
+    .profile-button {
+        padding: 8px;
+    }
+}
