@@ -171,7 +171,7 @@ export default function AdminLogin() {
                 disabled={loading}
                 className="primary-button"
               >
-                {loading ? 'Sending...' : 'Request Verification Code'}
+                {loading ? 'Sending...' : 'Request Access'}
               </button>
             ) : (
               <>

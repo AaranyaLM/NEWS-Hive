@@ -15,11 +15,11 @@ export default function AdminPanel() {
           setAuthorized(true);
         } else {
           setAuthorized(false);
-          window.location.href = '/admin-login';
+          window.location.href = '/admin/login';
         }
       }).catch(() => {
         setAuthorized(false);
-        window.location.href = '/admin-login';
+        window.location.href = '/admin/login';
       });
   }, []);
 

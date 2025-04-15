@@ -17,7 +17,7 @@ function App() {
   return (
     <Router>
       <Routes>
-      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/panel" element={<AdminPanel />} />
       <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/userauth" element={<UserAuth />} />
