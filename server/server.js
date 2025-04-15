@@ -1647,3 +1647,123 @@ app.get('/api/trending', isAuthenticated, (req, res) => {
 app.listen(5000, () => {
   console.log('Server started on http://localhost:5000');
 });
+
+
+
+//Admin 
+// Admin authentication configuration
+const ADMIN_EMAIL = 'aaranyalmaskey@gmail.com'; // Consider moving to environment variables
+let loginCode = null;
+let codeExpiration = null;
+
+// Configure CORS to allow credentials
+app.use(cors({
+  origin: 'http://localhost:3000', // Your frontend URL
+  credentials: true
+}));
+
+// Configure session middleware
+app.use(session({
+  secret: 'super_secret_news_hive_key', // Move to environment variable in production
+  resave: false,
+  saveUninitialized: false, // Changed to false for better security
+  cookie: {
+    maxAge: 30 * 60 * 1000, // 30 minutes
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Only use secure in production
+    sameSite: 'lax' // Helps prevent CSRF
+  },
+}));
+
+// Setup nodemailer transporter
+const transporterAdmin = nodemailer.createTransport({
+  service: 'gmail', 
+  auth: {
+    user: 'aaranyalalmaskey@gmail.com',
+    pass: 'dhpw igla rzzj nhkg', // Consider moving to environment variables
+  },
+});
+
+// Request login code endpoint
+app.post('/request-admin-code', async (req, res) => {
+  const { email } = req.body;
+  
+  if (email !== ADMIN_EMAIL) {
+    return res.status(403).json({ message: 'Unauthorized email' });
+  }
+
+  // Generate 6-digit code
+  loginCode = Math.floor(100000 + Math.random() * 900000).toString();
+  codeExpiration = Date.now() + 5 * 60 * 1000; // 5 mins expiry
+
+  const mailOptions = {
+    from: 'aaranyalalmaskey@gmail.com',
+    to: ADMIN_EMAIL,
+    subject: 'Your News Hive Admin Login Code',
+    text: `Your login code is: ${loginCode}. It will expire in 5 minutes.`,
+  };
+
+  try {
+    await transporterAdmin.sendMail(mailOptions);
+    res.json({ message: 'Code sent to admin email' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Failed to send email' });
+  }
+});
+
+// Verify code endpoint - FIXED DUPLICATE DEFINITION
+app.post('/verify-admin-code', (req, res) => {
+  const { email, code } = req.body;
+  
+  if (email !== ADMIN_EMAIL) {
+    return res.status(403).json({ message: 'Unauthorized email' });
+  }
+
+  const now = Date.now();
+  if (code === loginCode && now < codeExpiration) {
+    req.session.isAdmin = true; // Set session flag
+    loginCode = null;
+    codeExpiration = null;
+    return res.json({ success: true });
+  }
+
+  return res.status(401).json({ message: 'Invalid or expired code' });
+});
+
+// Check admin session endpoint
+app.get('/check-admin-session', (req, res) => {
+  if (req.session && req.session.isAdmin) {
+    res.json({ isAdmin: true });
+  } else {
+    res.status(401).json({ isAdmin: false });
+  }
+});
+
+// Admin logout endpoint
+app.post('/admin-logout', (req, res) => {
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Failed to logout' });
+      }
+      res.clearCookie('connect.sid'); // Clear the session cookie
+      res.json({ message: 'Logged out successfully' });
+    });
+  } else {
+    res.json({ message: 'Not logged in' });
+  }
+});
+
+// Middleware to protect admin routes
+const requireAdmin = (req, res, next) => {
+  if (!req.session || !req.session.isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized access' });
+  }
+  next();
+};
+
+// Example protected route
+app.get('/admin-panel', requireAdmin, (req, res) => {
+  res.send('Welcome to Admin Panel'); // This will usually serve React or API data
+});

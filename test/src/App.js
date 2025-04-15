@@ -9,11 +9,15 @@ import ProtectedRoute from './Components/ProtectedRoute';
 import Profile from './Pages/Profilepage';
 import EditProfilepage from './Pages/EditProfilepage';
 import SavedArticlePage from './Pages/SavedArticlePage';
-
+import UserProfile from './Components/UserProfile';
+import AdminLogin from './Pages/Admin/AdminLogin';
+import AdminPanel from './Pages/Admin/AdminPanel';
 function App() {
   return (
     <Router>
       <Routes>
+      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/admin-panel" element={<AdminPanel />} />
         <Route path="/userauth" element={<UserAuth />} />
         <Route path="/forgot" element={<ForgotPassword />} /> 
         <Route path="/" element={
@@ -45,6 +49,11 @@ function App() {
           <SavedArticlePage>
             <EditProfilepage />
           </SavedArticlePage>
+        } />
+          <Route path="/user/:userId" element={
+          <UserProfile>
+            <EditProfilepage />
+          </UserProfile>
         } />
       </Routes>
     </Router>

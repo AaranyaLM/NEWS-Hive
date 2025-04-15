@@ -1,21 +1,37 @@
 /* Toast.css */
 .toast-notification {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100px);
-    background-color: #4CAF50;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 4px;
-    font-size: 16px;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
-  
-  .toast-notification.visible {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background-color: #4caf50; /* Default green for success */
+  color: white;
+  padding: 12px 24px;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  z-index: 1000;
+  text-align: center;
+  min-width: 250px;
+  max-width: 90%;
+}
+
+.toast-notification.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Error toast style */
+.toast-notification.error {
+  background-color: #f44336; /* Red for errors */
+}
+
+/* Additional toast types if needed */
+.toast-notification.warning {
+  background-color: #ff9800; /* Orange for warnings */
+}
+
+.toast-notification.info {
+  background-color: #2196f3; /* Blue for info */
+}

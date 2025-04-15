@@ -90,7 +90,14 @@ function SavedArticles() {
             const data = await response.json();
             
             if (data.success) {
-                setSavedArticles(data.articles);
+                // Sort articles by date (newest first)
+                const sortedArticles = data.articles.sort((a, b) => {
+                    const dateA = new Date(a.publishedAt);
+                    const dateB = new Date(b.publishedAt);
+                    return dateB - dateA; // Descending order (newest first)
+                });
+                
+                setSavedArticles(sortedArticles);
             }
             return true;
         } catch (error) {
