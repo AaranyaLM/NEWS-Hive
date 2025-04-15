@@ -1767,3 +1767,101 @@ const requireAdmin = (req, res, next) => {
 app.get('/admin-panel', requireAdmin, (req, res) => {
   res.send('Welcome to Admin Panel'); // This will usually serve React or API data
 });
+
+
+// Get all users for admin
+app.get('/admin/users', requireAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT id, username, email, created_at, is_verified, bio FROM users'
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
+// Update a user (admin only)
+app.put('/admin/users/:id', requireAdmin, async (req, res) => {
+  const userId = req.params.id;
+  const { username, email, is_verified, bio } = req.body;
+  
+  try {
+    // Check if username already exists (excluding the current user)
+    const [existingUsers] = await pool.execute(
+      'SELECT id FROM users WHERE username = ? AND id != ?',
+      [username, userId]
+    );
+    
+    if (existingUsers.length > 0) {
+      return res.status(409).json({ message: 'Username already taken' });
+    }
+    
+    // Check if email already exists (excluding the current user)
+    const [existingEmails] = await pool.execute(
+      'SELECT id FROM users WHERE email = ? AND id != ?',
+      [email, userId]
+    );
+    
+    if (existingEmails.length > 0) {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
+    
+    // Update user information
+    await pool.execute(
+      'UPDATE users SET username = ?, email = ?, is_verified = ?, bio = ? WHERE id = ?',
+      [username, email, is_verified, bio, userId]
+    );
+    
+    res.json({ message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Failed to update user' });
+  }
+});
+
+// Delete a user (admin only)
+app.delete('/admin/users/:id', requireAdmin, async (req, res) => {
+  const userId = req.params.id;
+  
+  try {
+    // Check if user exists
+    const [user] = await pool.execute(
+      'SELECT id FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Delete the user
+    await pool.execute('DELETE FROM users WHERE id = ?', [userId]);
+    
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Failed to delete user' });
+  }
+});
+
+app.get('/admin/users/:id', requireAdmin, async (req, res) => {
+  const userId = req.params.id;
+  
+  try {
+    const [rows] = await pool.execute(
+      'SELECT id, username, email, created_at, is_verified, bio FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Failed to fetch user' });
+  }
+});

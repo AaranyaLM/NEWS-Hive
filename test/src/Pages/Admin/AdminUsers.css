@@ -1,0 +1,380 @@
+/* AdminUsers.css */
+.admin-users-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    margin-left: calc(250px + 20px); /* Adjust the 250px value to match your sidebar width */
+    padding: 0 20px;
+    width: calc(100% - 250px - 40px); /* Adjust the 250px value to match your sidebar width */
+  }
+  
+  
+  .admin-users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .admin-users-header h1 {
+    font-size: 24px;
+    color: #111827;
+    margin: 0;
+  }
+  
+  .admin-search-bar {
+    position: relative;
+    width: 300px;
+  }
+  
+  .admin-search-bar input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  
+  .admin-search-bar input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+  
+  .admin-search-bar svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+  }
+  
+  .admin-users-table {
+    width: 100%;
+    overflow-x: auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .admin-users-table table {
+    width: 100%;
+    min-width: 800px; /* Ensures minimum width for all columns to display */
+    border-collapse: collapse;
+  }
+  
+  
+  .admin-users-table th,
+  .admin-users-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .admin-users-table th {
+    font-weight: 600;
+    color: #374151;
+    background-color: #f3f4f6;
+  }
+  
+  .admin-users-table tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  .verification-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .verification-badge.verified {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+  
+  .verification-badge.not-verified {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .action-buttons button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+  }
+  
+  .action-buttons .edit-button {
+    color: #4f46e5;
+  }
+  
+  .action-buttons .edit-button:hover {
+    background-color: rgba(79, 70, 229, 0.1);
+  }
+  
+  .action-buttons .delete-button {
+    color: #ef4444;
+  }
+  
+  .action-buttons .delete-button:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+  
+  .admin-user-edit-form {
+    background-color: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+  }
+  
+  .admin-user-edit-form h2 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #111827;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #374151;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+  
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+  }
+  
+  .checkbox-group label {
+    margin-bottom: 0;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  
+  .form-actions button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .cancel-button {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
+  }
+  
+  .cancel-button:hover {
+    background-color: #f9fafb;
+  }
+  
+  .save-button {
+    background-color: #3b82f6;
+    border: 1px solid transparent;
+    color: white;
+  }
+  
+  .save-button:hover {
+    background-color: #2563eb;
+  }
+  
+  .admin-loading,
+  .admin-error,
+  .no-results {
+    text-align: center;
+    padding: 24px;
+    color: #6b7280;
+  }
+  
+  .admin-error {
+    color: #ef4444;
+  }
+  
+  @media (max-width: 768px) {
+    .admin-users-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    
+    .admin-search-bar {
+      width: 100%;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+    }
+    
+    .form-actions button {
+      width: 100%;
+    }
+  }
+
+  @media screen and (max-width: 1200px) {
+    .admin-users-container {
+      margin-left: 20px; /* For mobile view when sidebar might collapse or display differently */
+      width: calc(100% - 40px);
+    }
+}
+
+/* Delete confirmation modal styles */
+.delete-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .delete-modal {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+  }
+  
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .delete-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .delete-modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+  }
+  
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #777;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .close-button:hover {
+    color: #333;
+  }
+  
+  .delete-modal-body {
+    padding: 20px;
+    color: #444;
+  }
+  
+  .user-to-delete-info {
+    background-color: #f8f8f8;
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+  }
+  
+  .user-to-delete-info p {
+    margin: 5px 0;
+  }
+  
+  .delete-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    gap: 10px;
+  }
+  
+  .cancel-button {
+    padding: 8px 15px;
+    background-color: #f2f2f2;
+    color: #555;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .delete-confirm-button {
+    padding: 8px 15px;
+    background-color: #e15252;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .cancel-button:hover {
+    background-color: #e5e5e5;
+  }
+  
+  .delete-confirm-button:hover {
+    background-color: #d13030;
+  }
+  
+  /* Make sure modal has higher z-index than other elements */
+  .delete-modal {
+    z-index: 1001;
+  }

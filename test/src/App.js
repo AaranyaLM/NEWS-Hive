@@ -12,12 +12,14 @@ import SavedArticlePage from './Pages/SavedArticlePage';
 import UserProfile from './Components/UserProfile';
 import AdminLogin from './Pages/Admin/AdminLogin';
 import AdminPanel from './Pages/Admin/AdminPanel';
+import AdminUsers from './Pages/Admin/AdminUsers';
 function App() {
   return (
     <Router>
       <Routes>
       <Route path="/admin-login" element={<AdminLogin />} />
-      <Route path="/admin-panel" element={<AdminPanel />} />
+      <Route path="/admin/panel" element={<AdminPanel />} />
+      <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/userauth" element={<UserAuth />} />
         <Route path="/forgot" element={<ForgotPassword />} /> 
         <Route path="/" element={
