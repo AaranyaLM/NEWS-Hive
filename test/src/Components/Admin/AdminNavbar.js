@@ -11,11 +11,13 @@ export default function AdminNavbar() {
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
+  
   const handleViewWebsite = (e) => {
     e.preventDefault();
     const url = '/'; // your internal route
     window.open(url, '_blank');
   };
+  
   const logout = async () => {
     try {
       await axios.post('http://localhost:5000/admin-logout', {}, { withCredentials: true });
@@ -52,6 +54,12 @@ export default function AdminNavbar() {
               </svg>
               <span>Dashboard</span>
             </Link>
+            <Link to="/admin/system-status" className={`admin-sidebar-link ${isActive('/admin/system-status')}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+              </svg>
+              <span>System Status</span>
+            </Link>
             <Link to="/admin/users" className={`admin-sidebar-link ${isActive('/admin/users')}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -64,6 +72,14 @@ export default function AdminNavbar() {
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               </svg>
               <span>Comments</span>
+            </Link>
+            <Link to="/admin/activities" className={`admin-sidebar-link ${isActive('/admin/activities')}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M4 4h16v4H4z"></path>
+                <circle cx="12" cy="14" r="4"></circle>
+              </svg>
+              <span>Admin Activities</span>
             </Link>
             <Link to="/admin/settings" className={`admin-sidebar-link ${isActive('/admin/settings')}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -132,9 +148,11 @@ export default function AdminNavbar() {
           </button>
           
           <div className={`admin-navbar-links ${menuOpen ? 'open' : ''}`}>
-            <Link to="/admin" className={isActive('/admin')}>Dashboard</Link>
+            <Link to="/admin/panel" className={isActive('/admin/panel')}>Dashboard</Link>
+            <Link to="/admin/system-status" className={isActive('/admin/system-status')}>System Status</Link>
             <Link to="/admin/users" className={isActive('/admin/users')}>Users</Link>
             <Link to="/admin/comments" className={isActive('/admin/comments')}>Comments</Link>
+            <Link to="/admin/activities" className={isActive('/admin/activities')}>Admin Activities</Link>
             <Link to="/admin/settings" className={isActive('/admin/settings')}>Settings</Link>
             <Link to="/">View Website</Link>
             <button onClick={logout} className="admin-mobile-logout">Logout</button>
@@ -144,5 +162,3 @@ export default function AdminNavbar() {
     </>
   );
 }
-
-

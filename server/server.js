@@ -12,6 +12,8 @@ const NewsAPI = require('newsapi');
 const newsapi = new NewsAPI('c31a65d1df3d4f49a2b9fb548e99bb0b');
 const mongoose = require('mongoose');
 const Interaction = require('./InteractionModel');
+app.use(express.static('public')); 
+
 
 // Database configuration
 const dbConfig = {
@@ -50,7 +52,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Set up session middleware
 app.use(session({
-  name: 'admin_session',
+  name: 'user_session',
   key: 'session_cookie_name',
   secret: 'session_cookie_secret', // Use a strong secret in production
   store: sessionStore,
@@ -1665,7 +1667,7 @@ app.use(cors({
 
 // Configure session middleware
 app.use(session({
-   name: 'user_session',
+   name: 'admin_session',
   secret: 'super_secret_news_hive_key', // Move to environment variable in production
   resave: false,
   saveUninitialized: false, // Changed to false for better security
