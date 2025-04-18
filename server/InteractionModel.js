@@ -5,6 +5,7 @@ const interactionSchema = new mongoose.Schema({
     userId: String,
     liked: { type: Boolean, default: false },
     saved: { type: Boolean, default: false }, // Add saved field
+    downloaded: { type: Boolean, default: false },
     articleData: Object, // Store article data for saved articles
     comments: [{ 
       text: String, 

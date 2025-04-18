@@ -17,6 +17,7 @@ const Articles = ({ articles }) => {
   const [floatingLikes, setFloatingLikes] = useState({});
   // State for tracking which article has its menu open
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [loadingDownload, setLoadingDownload] = useState(null);
 
   const generateArticleId = (article) => {
     // Log to confirm encoding is identical to what's in the database
@@ -363,11 +364,53 @@ const toggleLike = async (article) => {
     }
   };
 
-  // Placeholder function for download (no functionality )
-  const handleDownload = (e, article) => {
+  // Placeholder function for download
+  const handleDownload = async (e, article) => {
     e.stopPropagation();
-    console.log('Download article:', article.title);
-    setOpenMenuId(null);
+    if (!currentUser) return;
+    
+    try {
+      setLoadingDownload(article.url); // Add this state to track which article is downloading
+      
+      const articleId = generateArticleId(article);
+      
+      const response = await fetch('http://localhost:5000/api/download-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          articleId,
+          article,
+          userId: currentUser.id
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+      
+      // Create a blob from the PDF stream
+      const blob = await response.blob();
+      
+      // Create a link element and trigger download
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `${article.title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('Error downloading article:', error);
+      alert('Failed to download the article. Please try again.');
+    } finally {
+      setLoadingDownload(null);
+      setOpenMenuId(null); // Close the menu
+    }
   };
 
   return (
@@ -395,25 +438,29 @@ const toggleLike = async (article) => {
                       <FaEllipsisV />
                     </button>
                     {openMenuId === articleId && (
-                      <div className="menu-dropdown">
-                        <div 
-                          className="menu-item" 
-                          onClick={(e) => handleSaveArticle(e, article)}
-                        >
-                          {savedArticles[articleId] ? (
-                            <><FaBookmarkSolid color="#187" /> Unsave</>
-                          ) : (
-                            <><FaBookmark /> Save</>
-                          )}
-                        </div>
-                        <div 
-                          className="menu-item" 
-                          onClick={(e) => handleDownload(e, article)}
-                        >
-                          <FaDownload /> Download
-                        </div>
-                      </div>
-                    )}
+  <div className="menu-dropdown">
+    <div 
+      className="menu-item" 
+      onClick={(e) => handleSaveArticle(e, article)}
+    >
+      {savedArticles[articleId] ? (
+        <><FaBookmarkSolid color="#187" /> Unsave</>
+      ) : (
+        <><FaBookmark /> Save</>
+      )}
+    </div>
+    <div 
+      className="menu-item" 
+      onClick={(e) => handleDownload(e, article)}
+    >
+      {loadingDownload === article.url ? (
+        <>Downloading...</>
+      ) : (
+        <><FaDownload /> Download</>
+      )}
+    </div>
+  </div>
+)}
                   </div>
                 </div>
                 <div className="article-content">
