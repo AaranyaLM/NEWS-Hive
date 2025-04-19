@@ -1,0 +1,6 @@
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+   .Homepage{
+    margin-top: 45px;
+   }
+}

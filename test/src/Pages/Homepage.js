@@ -3,6 +3,7 @@ import Searchbar from '../Components/Searchbar';
 import ArticleFeed from '../Components/ArticleFeed';
 import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
+import './Homepage.css';
 
 const Homepage = () => {
   const [searchQuery, setSearchQuery] = useState('bitcoin');

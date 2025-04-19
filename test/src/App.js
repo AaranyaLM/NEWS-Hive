@@ -16,6 +16,7 @@ import AdminUsers from './Pages/Admin/AdminUsers';
 import AdminComments from './Pages/Admin/AdminComments';
 import AdminActivities from './Pages/Admin/AdminActivities';
 import SystemStatus from './Pages/Admin/SystemStatus';
+import Downloads from './Pages/Downloads';
 function App() {
   return (
     <Router>
@@ -62,6 +63,11 @@ function App() {
           <UserProfile>
             <EditProfilepage />
           </UserProfile>
+        } />
+          <Route path="/downloads" element={
+          <Downloads>
+            <EditProfilepage />
+          </Downloads>
         } />
       </Routes>
     </Router>

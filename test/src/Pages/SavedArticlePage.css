@@ -86,6 +86,7 @@
 @media (max-width: 768px) {
     .saved-article-page {
         padding: 10px;
+        margin-top: 45px;
     }
     
     .header-left h1 {
