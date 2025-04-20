@@ -139,10 +139,21 @@ function DownloadedArticles() {
 
     const removeFromDownloads = async (articleId) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/user/remove-download/${articleId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-                // No need to send userId in body as we'll use session auth
+            // Show a loading toast
+            showToast('Removing article...');
+            
+            // Do NOT encode the articleId - we want to send it exactly as it is
+            console.log('Attempting to remove article with ID:', articleId);
+            
+            const response = await fetch(`http://localhost:5000/api/user/remove-download`, {
+                method: 'POST', // Changed to POST for better handling of complex IDs
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    articleId: articleId
+                })
             });
             
             const data = await response.json();
@@ -154,21 +165,20 @@ function DownloadedArticles() {
                 );
                 showToast('Article removed from downloads');
             } else {
-                console.error('Failed to remove article from downloads');
-                showToast('Failed to remove from downloads');
+                console.error('Failed to remove article:', data.message);
+                showToast(data.message || 'Failed to remove from downloads');
             }
         } catch (error) {
             console.error('Error removing article from downloads:', error);
             showToast('Error removing from downloads');
         }
     };
-
     // Modified function to open the PDF when "Read More" is clicked
     const handleReadMore = async (article, e) => {
         if (e) e.preventDefault();
         
         if (!article || !article.articleData) return;
-
+    
         try {
             showToast('Opening PDF...');
             
@@ -181,7 +191,8 @@ function DownloadedArticles() {
                 credentials: 'include',
                 body: JSON.stringify({
                     articleId: article.articleId,
-                    article: article.articleData
+                    article: article.articleData,
+                    userId: article.userId  // Include userId if available in article object
                 })
             });
             

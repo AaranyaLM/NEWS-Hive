@@ -1598,7 +1598,13 @@ app.get('/api/user/comments/count', isAuthenticated, async (req, res) => {
 
 app.post('/api/download-article', async (req, res) => {
   try {
-    const { articleId, article, userId } = req.body;
+    const { articleId, article } = req.body;
+    let userId = req.body.userId;
+    
+    // If userId is not provided in the request body, try to get it from the session
+    if (!userId && req.session && req.session.user) {
+      userId = req.session.user.id;
+    }
     
     if (!articleId || !article || !userId) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
@@ -1821,18 +1827,46 @@ app.get('/api/user/downloaded-articles', isAuthenticated, async (req, res) => {
 });
 
 // Remove an article from downloaded list
-app.delete('/api/user/remove-download/:articleId', isAuthenticated, async (req, res) => {
+// Change from DELETE to POST to handle complex articleIds
+app.post('/api/user/remove-download', isAuthenticated, async (req, res) => {
   try {
-    const { articleId } = req.params;
-    const userId = req.session.user.id; // Get user ID from authenticated session
+    const { articleId } = req.body;
+    const userId = req.session.user.id;
     
-    console.log(`Removing article ${articleId} from downloads for user ${userId}`);
+    if (!articleId) {
+      return res.status(400).json({ success: false, message: 'Missing articleId' });
+    }
+    
+    console.log(`Removing article from downloads`);
+    console.log(`ArticleId: "${articleId}"`);
+    console.log(`UserId: "${userId}"`);
+    
+    // First check if the article exists with this exact ID
+    const exists = await Interaction.findOne({
+      articleId: articleId,
+      userId: userId
+    });
+    
+    console.log('Found article in database:', exists ? 'YES' : 'NO');
+    
+    if (!exists) {
+      // If not found, do a debug query to see what's in the database
+      const allInteractions = await Interaction.find({ userId: userId });
+      console.log('All interactions for this user:', allInteractions.map(i => ({
+        id: i._id,
+        articleId: i.articleId,
+        downloaded: i.downloaded
+      })));
+      
+      return res.status(404).json({ success: false, message: 'Article not found in downloads' });
+    }
     
     // Update the interaction to set downloaded to false
     const result = await Interaction.findOneAndUpdate(
       { 
         articleId: articleId,
-        userId: userId
+        userId: userId,
+        downloaded: true // Make sure we're only updating downloaded articles
       },
       { 
         $set: { downloaded: false }
@@ -1848,10 +1882,9 @@ app.delete('/api/user/remove-download/:articleId', isAuthenticated, async (req, 
     
   } catch (error) {
     console.error('Error removing article from downloads:', error);
-    res.status(500).json({ success: false, message: 'Error removing article from downloads' });
+    res.status(500).json({ success: false, message: 'Error removing article from downloads', error: error.message });
   }
 });
-
 // For the feeds
 // Protected API routes
 app.get('/api/news', isAuthenticated, (req, res) => {
