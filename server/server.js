@@ -35,6 +35,10 @@ if (!fs.existsSync(tempDir)) {
 // Create MySQL connection pool
 const pool = mysql.createPool(dbConfig);
 
+
+
+
+
 // Session store options
 const sessionStore = new MySQLStore({
   checkExpirationInterval: 900000, // How frequently to check for expired sessions (15 mins)
@@ -2355,6 +2359,326 @@ app.delete('/api/admin/comments/delete', requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete comment'
+    });
+  }
+});
+
+//contact us code
+
+// Submit a new contact message
+app.post('/api/contact/submit', isAuthenticated, async (req, res) => {
+  try {
+    const { subject, message, priority, userId } = req.body;
+    
+    // Get the authenticated user's ID from the session
+    const authenticatedUserId = req.session.user.id;
+    
+    // Debug logging to identify the issue
+    console.log('Session user:', req.session.user);
+    console.log('Request userId:', userId);
+    
+    // Validate that the authenticated user matches the userId in the request
+    if (authenticatedUserId !== userId) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "User ID mismatch. Unauthorized action." 
+      });
+    }
+    
+    // Validate required fields
+    if (!subject || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Subject and message are required fields." 
+      });
+    }
+    
+    // Validate priority is one of the allowed values
+    const allowedPriorities = ['low', 'normal', 'high', 'urgent'];
+    if (!allowedPriorities.includes(priority)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid priority value." 
+      });
+    }
+    
+    // Insert the contact message into the database
+    const [result] = await pool.execute(
+      'INSERT INTO contact_messages (user_id, subject, message, priority, status) VALUES (?, ?, ?, ?, ?)',
+      [userId, subject, message, priority, 'new']
+    );
+    
+    // Return success response
+    res.status(201).json({ 
+      success: true, 
+      message: "Contact message submitted successfully", 
+      messageId: result.insertId 
+    });
+  } catch (error) {
+    console.error('Error submitting contact message:', error.stack); // Log the full stack trace
+    res.status(500).json({ 
+      success: false, 
+      message: "An error occurred while submitting your message",
+      error: error.message // Include the error message in the response (in development only)
+    });
+  }
+});
+
+// Get user's contact messages (with optional filtering)
+app.get('/api/contact/messages', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { status, priority } = req.query;
+    
+    let sql = 'SELECT * FROM contact_messages WHERE user_id = ?';
+    const params = [userId];
+    
+    // Add optional filters
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+    
+    if (priority) {
+      sql += ' AND priority = ?';
+      params.push(priority);
+    }
+    
+    // Add order by newest first
+    sql += ' ORDER BY created_at DESC';
+    
+    const [messages] = await pool.execute(sql, params);
+    
+    res.json({ 
+      success: true, 
+      messages 
+    });
+  } catch (error) {
+    console.error('Error fetching contact messages:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "An error occurred while fetching your messages" 
+    });
+  }
+});
+
+// Get a specific contact message
+app.get('/api/contact/messages/:messageId', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const messageId = req.params.messageId;
+    
+    // Get the message and verify it belongs to the user
+    const [messages] = await pool.execute(
+      'SELECT * FROM contact_messages WHERE id = ? AND user_id = ?',
+      [messageId, userId]
+    );
+    
+    if (messages.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Message not found or you don't have permission to view it" 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: messages[0] 
+    });
+  } catch (error) {
+    console.error('Error fetching contact message:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "An error occurred while fetching the message" 
+    });
+  }
+});
+
+// Admin endpoints for managing contact messages
+// Get all contact messages (admin only)
+app.get('/api/admin/contact/messages', isAuthenticated, requireAdmin, async (req, res) => {
+  try {
+    const { status, priority, userId } = req.query;
+    
+    let sql = 'SELECT cm.*, u.username, u.email FROM contact_messages cm ' +
+              'JOIN users u ON cm.user_id = u.id';
+    const params = [];
+    
+    // Add WHERE clause only if we have filters
+    const conditions = [];
+    
+    if (status) {
+      conditions.push('cm.status = ?');
+      params.push(status);
+    }
+    
+    if (priority) {
+      conditions.push('cm.priority = ?');
+      params.push(priority);
+    }
+    
+    if (userId) {
+      conditions.push('cm.user_id = ?');
+      params.push(userId);
+    }
+    
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+    
+    // Add order by newest first
+    sql += ' ORDER BY cm.created_at DESC';
+    
+    const [messages] = await pool.execute(sql, params);
+    
+    res.json({ 
+      success: true, 
+      messages 
+    });
+  } catch (error) {
+    console.error('Error fetching admin contact messages:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "An error occurred while fetching messages" 
+    });
+  }
+});
+
+// Update contact message status (admin only)
+app.patch('/api/admin/contact/messages/:messageId', isAuthenticated, requireAdmin, async (req, res) => {
+  try {
+    const messageId = req.params.messageId;
+    const { status, admin_notes } = req.body;
+    
+    // Validate the status is one of the allowed values
+    const allowedStatuses = ['new', 'in_progress', 'resolved', 'closed'];
+    if (status && !allowedStatuses.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid status value." 
+      });
+    }
+    
+    // Build the update query dynamically based on what fields are provided
+    let sql = 'UPDATE contact_messages SET ';
+    const updates = [];
+    const params = [];
+    
+    if (status) {
+      updates.push('status = ?');
+      params.push(status);
+    }
+    
+    if (admin_notes !== undefined) {
+      updates.push('admin_notes = ?');
+      params.push(admin_notes);
+    }
+    
+    // Always update the updated_at timestamp
+    updates.push('updated_at = CURRENT_TIMESTAMP()');
+    
+    // If no updates, return an error
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields to update were provided."
+      });
+    }
+    
+    // Complete the SQL query
+    sql += updates.join(', ');
+    sql += ' WHERE id = ?';
+    params.push(messageId);
+    
+    const [result] = await pool.execute(sql, params);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found or no changes were made."
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: "Message updated successfully"
+    });
+  } catch (error) {
+    console.error('Error updating contact message:', error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the message"
+    });
+  }
+});
+
+// Delete a contact message (admin only)
+app.delete('/api/admin/contact/messages/:messageId', isAuthenticated, requireAdmin, async (req, res) => {
+  try {
+    const messageId = req.params.messageId;
+    
+    const [result] = await pool.execute(
+      'DELETE FROM contact_messages WHERE id = ?',
+      [messageId]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found."
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: "Message deleted successfully"
+    });
+  } catch (error) {
+    console.error('Error deleting contact message:', error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting the message"
+    });
+  }
+});
+
+// Get contact message statistics (admin only)
+app.get('/api/admin/contact/stats', isAuthenticated, requireAdmin, async (req, res) => {
+  try {
+    // Get count of messages by status
+    const [statusStats] = await pool.execute(
+      'SELECT status, COUNT(*) as count FROM contact_messages GROUP BY status'
+    );
+    
+    // Get count of messages by priority
+    const [priorityStats] = await pool.execute(
+      'SELECT priority, COUNT(*) as count FROM contact_messages GROUP BY priority'
+    );
+    
+    // Get total messages
+    const [totalResult] = await pool.execute(
+      'SELECT COUNT(*) as total FROM contact_messages'
+    );
+    
+    // Get unresolved messages count (new + in_progress)
+    const [unresolvedResult] = await pool.execute(
+      'SELECT COUNT(*) as unresolved FROM contact_messages WHERE status IN ("new", "in_progress")'
+    );
+    
+    res.json({
+      success: true,
+      stats: {
+        total: totalResult[0].total,
+        unresolved: unresolvedResult[0].unresolved,
+        byStatus: statusStats,
+        byPriority: priorityStats
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching contact message stats:', error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching message statistics"
     });
   }
 });

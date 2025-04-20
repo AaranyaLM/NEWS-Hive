@@ -4,6 +4,7 @@ import SavedArticles from '../Components/SavedArticles';
 import { FaArrowLeft, FaUser } from 'react-icons/fa';
 import Navbar from '../Components/Navbar'; // Import the Navbar component
 import './SavedArticlePage.css';
+import Footer from '../Components/Footer';
 
 function SavedArticlePage() {
     const [user, setUser] = useState(null);
@@ -56,7 +57,8 @@ function SavedArticlePage() {
     }
 
     return (
-        <div className="page-container">
+        <>
+         <div className="page-container">
             <Navbar /> {/* Include the Navbar component */}
             
             <div className="saved-article-page">
@@ -85,6 +87,9 @@ function SavedArticlePage() {
                 </div>
             </div>
         </div>
+        <Footer></Footer>
+        </>
+       
     );
 }
 

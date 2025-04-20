@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import DownloadedArticles from '../Components/DownloadedArticles';
 import { FaUser } from 'react-icons/fa';
 import Navbar from '../Components/Navbar';
-import './SavedArticlePage.css'; // Reuse the same CSS
+import './SavedArticlePage.css'; 
+import Footer from '../Components/Footer';
 
 function Downloads() {
     const [user, setUser] = useState(null);
@@ -52,7 +53,8 @@ function Downloads() {
     }
 
     return (
-        <div className="page-container">
+        <>
+          <div className="page-container">
             <Navbar />
             
             <div className="saved-article-page">
@@ -78,6 +80,9 @@ function Downloads() {
                 </div>
             </div>
         </div>
+        <Footer></Footer>
+        </>
+      
     );
 }
 

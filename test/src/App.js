@@ -17,6 +17,7 @@ import AdminComments from './Pages/Admin/AdminComments';
 import AdminActivities from './Pages/Admin/AdminActivities';
 import SystemStatus from './Pages/Admin/SystemStatus';
 import Downloads from './Pages/Downloads';
+import Contact from './Pages/Contact';
 function App() {
   return (
     <Router>
@@ -55,19 +56,24 @@ function App() {
           </ProtectedRoute>
         } />
           <Route path="/saved" element={
-          <SavedArticlePage>
-            <EditProfilepage />
-          </SavedArticlePage>
+          <ProtectedRoute>
+            <SavedArticlePage />
+          </ProtectedRoute>
         } />
           <Route path="/user/:userId" element={
-          <UserProfile>
-            <EditProfilepage />
-          </UserProfile>
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
         } />
           <Route path="/downloads" element={
-          <Downloads>
-            <EditProfilepage />
-          </Downloads>
+          <ProtectedRoute>
+            <Downloads />
+          </ProtectedRoute>
+        } />
+         <Route path="/contact" element={
+          <ProtectedRoute>
+            <Contact />
+          </ProtectedRoute>
         } />
       </Routes>
     </Router>
