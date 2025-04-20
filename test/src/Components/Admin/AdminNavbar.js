@@ -54,12 +54,7 @@ export default function AdminNavbar() {
               </svg>
               <span>Dashboard</span>
             </Link>
-            <Link to="/admin/system-status" className={`admin-sidebar-link ${isActive('/admin/system-status')}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-              </svg>
-              <span>System Status</span>
-            </Link>
+           
             <Link to="/admin/users" className={`admin-sidebar-link ${isActive('/admin/users')}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -149,7 +144,7 @@ export default function AdminNavbar() {
           
           <div className={`admin-navbar-links ${menuOpen ? 'open' : ''}`}>
             <Link to="/admin/panel" className={isActive('/admin/panel')}>Dashboard</Link>
-            <Link to="/admin/system-status" className={isActive('/admin/system-status')}>System Status</Link>
+  
             <Link to="/admin/users" className={isActive('/admin/users')}>Users</Link>
             <Link to="/admin/comments" className={isActive('/admin/comments')}>Comments</Link>
             <Link to="/admin/activities" className={isActive('/admin/activities')}>Admin Activities</Link>

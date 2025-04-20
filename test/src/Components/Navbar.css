@@ -335,7 +335,7 @@
     }
     
     .navbar-links.open {
-        max-height: 200px; /* Adjust based on content */
+        max-height: 500px; /* Adjust based on content */
     }
     
     .navbar-links a {
