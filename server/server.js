@@ -1537,7 +1537,6 @@ app.get('/api/user/saved-articles', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch saved articles' });
   }
 });
-// Add these endpoints to your server.js or routes file
 
 // Get count of saved articles for the user
 app.get('/api/user/saved-articles/count', isAuthenticated, async (req, res) => {
@@ -1594,6 +1593,262 @@ app.get('/api/user/comments/count', isAuthenticated, async (req, res) => {
       error: 'Failed to count user comments',
       message: error.message
     });
+  }
+});
+
+app.post('/api/download-article', async (req, res) => {
+  try {
+    const { articleId, article, userId } = req.body;
+    
+    if (!articleId || !article || !userId) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+    
+    // Fetch article content from your Flask scraper
+    let articleContent = '';
+    try {
+      const scraperResponse = await fetch(`http://localhost:5001/scrape?url=${encodeURIComponent(article.url)}`);
+      if (scraperResponse.ok) {
+        const scraperData = await scraperResponse.json();
+        articleContent = scraperData.content || '';
+      } else {
+        console.error('Scraper service returned an error');
+        articleContent = 'Content could not be loaded. Please refer to the original article.';
+      }
+    } catch (scraperError) {
+      console.error('Error fetching from scraper service:', scraperError);
+      articleContent = 'Content could not be loaded. Please refer to the original article.';
+    }
+    
+    // Format content into paragraphs
+    const contentParagraphs = articleContent.split('\n')
+      .filter(paragraph => paragraph.trim())
+      .map(paragraph => `<p>${paragraph}</p>`)
+      .join('');
+    
+    // Generate a unique filename
+    const filename = `article_${articleId.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+    const outputPath = path.join(tempDir, filename);
+    
+    // Generate PDF using Puppeteer
+    const browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
+    
+    // Format the article publication date
+    const formattedDate = new Date(article.publishedAt).toLocaleString();
+    
+    // Create HTML content for PDF based on article and scraped content
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${article.title}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+            color: #333;
+          }
+          .header {
+            margin-bottom: 30px;
+          }
+          .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+          }
+          .source {
+            color: #666;
+            margin-bottom: 15px;
+          }
+          .date {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
+          }
+          .image-container {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .image {
+            max-width: 90%;
+            max-height: 400px;
+            object-fit: contain;
+          }
+          .description {
+            font-style: italic;
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #ddd;
+          }
+          .content {
+            margin-bottom: 30px;
+          }
+          .content p {
+            margin-bottom: 16px;
+            text-align: justify;
+          }
+          .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title">${article.title}</div>
+          <div class="source">Source: ${article.source?.name || 'Unknown'}</div>
+          <div class="date">Published: ${formattedDate}</div>
+        </div>
+        
+        ${article.urlToImage ? `
+        <div class="image-container">
+          <img src="${article.urlToImage}" class="image" alt="${article.title}">
+        </div>` : ''}
+        
+        <div class="description">${article.description || ''}</div>
+        
+        <div class="content">
+          ${contentParagraphs || '<p>No content available. Please check the original article.</p>'}
+        </div>
+        
+        <div class="footer">
+          <p>Downloaded from News Hive | Original URL: ${article.url}</p>
+          <p>Downloaded on: ${new Date().toLocaleString()}</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    await page.setContent(htmlContent);
+    await page.pdf({ 
+      path: outputPath, 
+      format: 'A4',
+      margin: {
+        top: '30px',
+        right: '50px',
+        bottom: '30px',
+        left: '50px'
+      },
+      printBackground: true
+    });
+    
+    await browser.close();
+    
+    // Update MongoDB to mark this article as downloaded
+    await Interaction.findOneAndUpdate(
+      { articleId, userId },
+      { 
+        $set: { downloaded: true },
+        $setOnInsert: { 
+          articleData: article,
+          liked: false,
+          saved: false,
+          comments: [],
+          shares: 0,
+          readMore: false
+        }
+      },
+      { upsert: true, new: true }
+    );
+    
+    // Send the file as a response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(article.title)}.pdf"`);
+    
+    const fileStream = fs.createReadStream(outputPath);
+    fileStream.pipe(res);
+    
+    // Delete the file after it's sent
+    fileStream.on('end', () => {
+      fs.unlinkSync(outputPath);
+    });
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ success: false, message: 'Error generating PDF' });
+  }
+});
+app.get('/api/check-downloads/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const downloadedArticles = await Interaction.find({ 
+      userId: userId,
+      downloaded: true 
+    }, 'articleId');
+    
+    res.json({ 
+      success: true, 
+      downloads: downloadedArticles.map(item => item.articleId)
+    });
+    
+  } catch (error) {
+    console.error('Error checking downloads:', error);
+    res.status(500).json({ success: false, message: 'Error checking downloads' });
+  }
+});
+// Fetch all downloaded articles for a user
+app.get('/api/user/downloaded-articles', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id; // Get user ID from authenticated session
+    console.log("Fetching downloaded articles for user:", userId);
+    
+    // Find all interactions with downloaded=true for this user
+    const downloadedInteractions = await Interaction.find({
+      userId: userId,
+      downloaded: true
+    });
+    
+    console.log(`Found ${downloadedInteractions.length} downloaded articles for user ${userId}`);
+    
+    // Return the article data
+    res.json({
+      success: true,
+      articles: downloadedInteractions
+    });
+    
+  } catch (error) {
+    console.error('Error fetching downloaded articles:', error);
+    res.status(500).json({ success: false, message: 'Error fetching downloaded articles' });
+  }
+});
+
+// Remove an article from downloaded list
+app.delete('/api/user/remove-download/:articleId', isAuthenticated, async (req, res) => {
+  try {
+    const { articleId } = req.params;
+    const userId = req.session.user.id; // Get user ID from authenticated session
+    
+    console.log(`Removing article ${articleId} from downloads for user ${userId}`);
+    
+    // Update the interaction to set downloaded to false
+    const result = await Interaction.findOneAndUpdate(
+      { 
+        articleId: articleId,
+        userId: userId
+      },
+      { 
+        $set: { downloaded: false }
+      },
+      { new: true }
+    );
+    
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Article not found in downloads' });
+    }
+    
+    res.json({ success: true, message: 'Article removed from downloads' });
+    
+  } catch (error) {
+    console.error('Error removing article from downloads:', error);
+    res.status(500).json({ success: false, message: 'Error removing article from downloads' });
   }
 });
 
@@ -2068,205 +2323,5 @@ app.delete('/api/admin/comments/delete', requireAdmin, async (req, res) => {
       success: false,
       error: 'Failed to delete comment'
     });
-  }
-});
-
-app.post('/api/download-article', async (req, res) => {
-  try {
-    const { articleId, article, userId } = req.body;
-    
-    if (!articleId || !article || !userId) {
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
-    }
-    
-    // Fetch article content from your Flask scraper
-    let articleContent = '';
-    try {
-      const scraperResponse = await fetch(`http://localhost:5001/scrape?url=${encodeURIComponent(article.url)}`);
-      if (scraperResponse.ok) {
-        const scraperData = await scraperResponse.json();
-        articleContent = scraperData.content || '';
-      } else {
-        console.error('Scraper service returned an error');
-        articleContent = 'Content could not be loaded. Please refer to the original article.';
-      }
-    } catch (scraperError) {
-      console.error('Error fetching from scraper service:', scraperError);
-      articleContent = 'Content could not be loaded. Please refer to the original article.';
-    }
-    
-    // Format content into paragraphs
-    const contentParagraphs = articleContent.split('\n')
-      .filter(paragraph => paragraph.trim())
-      .map(paragraph => `<p>${paragraph}</p>`)
-      .join('');
-    
-    // Generate a unique filename
-    const filename = `article_${articleId.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-    const outputPath = path.join(tempDir, filename);
-    
-    // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({ headless: 'new' });
-    const page = await browser.newPage();
-    
-    // Format the article publication date
-    const formattedDate = new Date(article.publishedAt).toLocaleString();
-    
-    // Create HTML content for PDF based on article and scraped content
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>${article.title}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            line-height: 1.6;
-            color: #333;
-          }
-          .header {
-            margin-bottom: 30px;
-          }
-          .title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-          }
-          .source {
-            color: #666;
-            margin-bottom: 15px;
-          }
-          .date {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 30px;
-          }
-          .image-container {
-            text-align: center;
-            margin-bottom: 30px;
-          }
-          .image {
-            max-width: 90%;
-            max-height: 400px;
-            object-fit: contain;
-          }
-          .description {
-            font-style: italic;
-            margin-bottom: 30px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-left: 4px solid #ddd;
-          }
-          .content {
-            margin-bottom: 30px;
-          }
-          .content p {
-            margin-bottom: 16px;
-            text-align: justify;
-          }
-          .footer {
-            margin-top: 50px;
-            text-align: center;
-            font-size: 12px;
-            color: #999;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">${article.title}</div>
-          <div class="source">Source: ${article.source?.name || 'Unknown'}</div>
-          <div class="date">Published: ${formattedDate}</div>
-        </div>
-        
-        ${article.urlToImage ? `
-        <div class="image-container">
-          <img src="${article.urlToImage}" class="image" alt="${article.title}">
-        </div>` : ''}
-        
-        <div class="description">${article.description || ''}</div>
-        
-        <div class="content">
-          ${contentParagraphs || '<p>No content available. Please check the original article.</p>'}
-        </div>
-        
-        <div class="footer">
-          <p>Downloaded from News Hive | Original URL: ${article.url}</p>
-          <p>Downloaded on: ${new Date().toLocaleString()}</p>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    await page.setContent(htmlContent);
-    await page.pdf({ 
-      path: outputPath, 
-      format: 'A4',
-      margin: {
-        top: '30px',
-        right: '50px',
-        bottom: '30px',
-        left: '50px'
-      },
-      printBackground: true
-    });
-    
-    await browser.close();
-    
-    // Update MongoDB to mark this article as downloaded
-    await Interaction.findOneAndUpdate(
-      { articleId, userId },
-      { 
-        $set: { downloaded: true },
-        $setOnInsert: { 
-          articleData: article,
-          liked: false,
-          saved: false,
-          comments: [],
-          shares: 0,
-          readMore: false
-        }
-      },
-      { upsert: true, new: true }
-    );
-    
-    // Send the file as a response
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(article.title)}.pdf"`);
-    
-    const fileStream = fs.createReadStream(outputPath);
-    fileStream.pipe(res);
-    
-    // Delete the file after it's sent
-    fileStream.on('end', () => {
-      fs.unlinkSync(outputPath);
-    });
-    
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    res.status(500).json({ success: false, message: 'Error generating PDF' });
-  }
-});
-// Add this endpoint to check if an article has been downloaded
-app.get('/api/check-downloads/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const downloadedArticles = await Interaction.find({ 
-      userId: userId,
-      downloaded: true 
-    }, 'articleId');
-    
-    res.json({ 
-      success: true, 
-      downloads: downloadedArticles.map(item => item.articleId)
-    });
-    
-  } catch (error) {
-    console.error('Error checking downloads:', error);
-    res.status(500).json({ success: false, message: 'Error checking downloads' });
   }
 });
