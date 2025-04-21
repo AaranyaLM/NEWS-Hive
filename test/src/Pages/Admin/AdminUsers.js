@@ -168,7 +168,11 @@ export default function AdminUsers() {
         />
 
         <div className="admin-users-header">
+          <div className='user-header'>
           <h1>User Management</h1>
+          <p>View and moderate all users</p>
+          </div>
+        
           <div className="admin-search-bar">
             <input
               type="text"

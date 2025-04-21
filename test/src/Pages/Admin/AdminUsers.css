@@ -14,10 +14,16 @@
     margin-bottom: 24px;
   }
   
+
   .admin-users-header h1 {
-    font-size: 24px;
-    color: #111827;
-    margin: 0;
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+  
+  .admin-users-header p {
+    color: #666;
+    font-size: 1rem;
   }
   
   .admin-search-bar {
