@@ -15,7 +15,6 @@ import AdminPanel from './Pages/Admin/AdminPanel';
 import AdminUsers from './Pages/Admin/AdminUsers';
 import AdminComments from './Pages/Admin/AdminComments';
 import AdminActivities from './Pages/Admin/AdminActivities';
-import SystemStatus from './Pages/Admin/SystemStatus';
 import Downloads from './Pages/Downloads';
 import Contact from './Pages/Contact';
 import AdminContacts from './Pages/Admin/AdminContacts';
@@ -27,7 +26,6 @@ function App() {
       <Route path="/admin/panel" element={<AdminPanel />} />
       <Route path="/admin/users" element={<AdminUsers />} />
       <Route path="/admin/activities" element={<AdminActivities />} />
-      <Route path="/admin/system-status" element={<SystemStatus />} />
       <Route path="/admin/comments" element={<AdminComments />} />
       <Route path="/admin/comments" element={<AdminComments />} />
       <Route path="/admin/contacts" element={<AdminContacts />} />
