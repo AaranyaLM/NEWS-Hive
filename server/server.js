@@ -2682,3 +2682,101 @@ app.get('/api/admin/contact/stats', isAuthenticated, requireAdmin, async (req, r
     });
   }
 });
+
+
+// Get total download count
+app.get('/api/admin/stats/downloads', isAuthenticated, requireAdmin, async (req, res) => {
+  try {
+    const count = await Interaction.countDocuments({ downloaded: true });
+    res.json({ count });
+  } catch (error) {
+    console.error('Error fetching download stats:', error);
+    res.status(500).json({ error: 'Failed to fetch download count' });
+  }
+});
+
+// Get interaction stats for admin dashboard charts
+app.get('/api/admin/interaction-stats', isAuthenticated, requireAdmin, async (req, res) => {
+  try {
+    // Get daily counts for the past week
+    const today = new Date();
+    const oneWeekAgo = new Date(today);
+    oneWeekAgo.setDate(today.getDate() - 7);
+    
+    // Get daily like counts
+    const dailyLikeCounts = await Interaction.aggregate([
+      { 
+        $match: { 
+          liked: true,
+          updatedAt: { $gte: oneWeekAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { 
+            $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } 
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+    
+    // Get daily comment counts
+    const dailyCommentCounts = await Interaction.aggregate([
+      { 
+        $match: { 
+          'comments.0': { $exists: true },
+          updatedAt: { $gte: oneWeekAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { 
+            $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } 
+          },
+          count: { $sum: { $size: "$comments" } }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+    
+    // Get daily download counts
+    const dailyDownloadCounts = await Interaction.aggregate([
+      { 
+        $match: { 
+          downloaded: true,
+          updatedAt: { $gte: oneWeekAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { 
+            $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } 
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+    
+    // Combine all stats
+    const combinedStats = {
+      likes: dailyLikeCounts,
+      comments: dailyCommentCounts,
+      downloads: dailyDownloadCounts
+    };
+    
+    res.json({ 
+      success: true, 
+      stats: combinedStats
+    });
+    
+  } catch (error) {
+    console.error('Error fetching interaction stats:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch interaction statistics'
+    });
+  }
+});
