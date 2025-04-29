@@ -112,7 +112,7 @@
 
 .sidebar-link:hover {
     color: #000;
-    transform: translateX(4px);
+    transform: translateX(2px);
 }
 
 .sidebar-link:hover::before {
