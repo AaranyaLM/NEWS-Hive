@@ -39,10 +39,10 @@
     left: 0;
     height: 100%;
     width: 300px;
-    background-color: white;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
     z-index: 100;
-    overflow-y: auto;
+    overflow-y: none;
 }
 
 .sidebar-container {
@@ -80,18 +80,48 @@
     padding: 12px 20px;
     color: #333;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     font-weight: 500;
     margin: 2px 0;
     border-radius: 0 8px 8px 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .sidebar-link svg {
     margin-right: 12px;
+    transition: all 0.25s ease;
+}
+
+.sidebar-link span {
+    position: relative;
+    z-index: 2;
+}
+
+.sidebar-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.02) 100%);
+    transition: width 0.3s ease;
+    z-index: 1;
 }
 
 .sidebar-link:hover {
-    background-color: #f5f5f5;
+    color: #000;
+    transform: translateX(4px);
+}
+
+.sidebar-link:hover::before {
+    width: 100%;
+}
+
+.sidebar-link:hover svg {
+    transform: scale(1.15);
+    color: #000;
 }
 
 .sidebar-link.active {
@@ -146,6 +176,7 @@
 .sidebar-link.login-button svg {
     margin-right: 8px;
 }
+
 
 /* Original Slim Navbar (Mobile) */
 .slim-navbar {
