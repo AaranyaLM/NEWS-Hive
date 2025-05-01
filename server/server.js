@@ -12,6 +12,7 @@ const NewsAPI = require('newsapi');
 const newsapi = new NewsAPI('c31a65d1df3d4f49a2b9fb548e99bb0b');
 const mongoose = require('mongoose');
 const Interaction = require('./InteractionModel');
+const UserPredictedTerms = require('../models/UserPredictedTerms');
 
 const puppeteer = require('puppeteer');
 const fs = require('fs');
