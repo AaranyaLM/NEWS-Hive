@@ -12,7 +12,7 @@ const NewsAPI = require('newsapi');
 const newsapi = new NewsAPI('c31a65d1df3d4f49a2b9fb548e99bb0b');
 const mongoose = require('mongoose');
 const Interaction = require('./InteractionModel');
-const UserPredictedTerms = require('../models/UserPredictedTerms');
+// const UserPredictedTerms = require('../models/UserPredictedTerms');
 
 const puppeteer = require('puppeteer');
 const fs = require('fs');
@@ -999,12 +999,13 @@ app.post('/api/user/change-password', isAuthenticated, async (req, res) => {
 
 
 // User interactions
-mongoose.connect('mongodb://localhost:27017/news_hive', {
+mongoose.connect('mongodb+srv://aaranyalmaskey:%40aaranya01@newshive.3ub8wnl.mongodb.net/news_hive?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}).then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error(err));
-
+})
+  .then(() => console.log('MongoDB Connected to Atlas'))
+  .catch(err => console.error('Error connecting to MongoDB Atlas:', err));
+  
 // Like an article
 app.post('/api/like', isAuthenticated, async (req, res) => {
   try {
