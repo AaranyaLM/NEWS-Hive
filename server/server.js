@@ -999,7 +999,7 @@ app.post('/api/user/change-password', isAuthenticated, async (req, res) => {
 
 
 // User interactions
-mongoose.connect('mongodb+srv://aaranyalmaskey:%40aaranya01@newshive.3ub8wnl.mongodb.net/news_hive?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://aaranyalmaskey:%40aaranya01@newshive.3ub8wnl.mongodb.net/news_hive', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
