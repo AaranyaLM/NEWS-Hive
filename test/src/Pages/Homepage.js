@@ -6,7 +6,7 @@ import Footer from '../Components/Footer';
 import './Homepage.css';
 
 const Homepage = () => {
-  const [searchQuery, setSearchQuery] = useState('bitcoin');
+  const [searchQuery, setSearchQuery] = useState('');
   const [filterBy, setFilterBy] = useState('');
   const [sortBy, setSortBy] = useState('relevancy');
 
