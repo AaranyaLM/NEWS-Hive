@@ -1908,6 +1908,7 @@ app.get('/api/news', isAuthenticated, (req, res) => {
     .everything({
       q: query,
       sortBy: sortBy,
+      language:"en",
     })
     .then(response => {
       let filteredArticles = response.articles;
