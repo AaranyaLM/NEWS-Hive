@@ -22,4 +22,5 @@ const userPredictedTermsSchema = new mongoose.Schema({
   }
 });
 
-const UserPredictedTerms = mongoose.model('UserPredictedTerms', userPredictedTermsSchema);
+const UserPredictionTerms = mongoose.model('UserPredictedTerms', userPredictedTermsSchema);
+module.exports = UserPredictionTerms;
