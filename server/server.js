@@ -2024,7 +2024,7 @@ function shuffleArray(array) {
     const j = Math.floor(Math.random() * (i + 1));
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]]; // Swap elements
   }
-  return array;
+  return newArray;
 }
 app.get('/api/trending', isAuthenticated, (req, res) => {
   const { q, country, category, sortBy } = req.query;
