@@ -36,10 +36,6 @@ if (!fs.existsSync(tempDir)) {
 // Create MySQL connection pool
 const pool = mysql.createPool(dbConfig);
 
-
-
-
-
 // Session store options
 const sessionStore = new MySQLStore({
   checkExpirationInterval: 900000, // How frequently to check for expired sessions (15 mins)
@@ -1893,40 +1889,143 @@ app.post('/api/user/remove-download', isAuthenticated, async (req, res) => {
 });
 // For the feeds
 // Protected API routes
-app.get('/api/news', isAuthenticated, (req, res) => {
+app.get('/api/news', isAuthenticated, async (req, res) => {
   console.log('Session User:', req.session.user);
+  const userId = req.session.user.id;
   
-  let query = req.query.q;
-  if (!query || query.trim() === '') {
-    query = 'bitcoin'; // Default keyword
+  // Ensure we have a valid userId
+  if (!userId) {
+    console.error('Invalid user ID in session');
+    return res.status(401).send('User ID not found in session');
   }
-
   const filterBy = req.query.filterBy || null;
   const sortBy = req.query.sortBy || 'relevancy';
-
-  newsapi.v2
-    .everything({
-      q: query,
-      sortBy: sortBy,
-      language:"en",
-    })
-    .then(response => {
-      let filteredArticles = response.articles;
-
-      if (filterBy === 'source') {
-        filteredArticles = filteredArticles.filter(article =>
-          article.source.name.toLowerCase().includes(query.toLowerCase())
-        );
-      }
-
-      res.json(filteredArticles);
-    })
-    .catch(err => {
-      console.error(err);
-      res.status(500).send('Error fetching news');
+  
+  try {
+    // Get user's predicted terms from database
+    const userPredictions = await UserPredictionTerms.findOne({ userId });
+    let queryTerms = ['football']; // Default fallback
+    
+    // Use predicted terms if available
+    if (userPredictions && userPredictions.predictedTerms && userPredictions.predictedTerms.length > 0) {
+      queryTerms = userPredictions.predictedTerms;
+    }
+    
+    // Log the search terms for the user
+    console.log(`Search Terms for User ${userId}:`, queryTerms);
+    
+    // Check if user specified a query parameter
+    if (req.query.q && req.query.q.trim() !== '') {
+      // If user specified a query, use it instead
+      console.log(`User specified direct query: ${req.query.q}`);
+      return fetchAndSendNews(req.query.q, filterBy, sortBy, res);
+    }
+    
+    // Fetch news for each predicted term
+    const allArticles = [];
+    const promises = [];
+    
+    // Create a promise for each term
+    queryTerms.forEach(term => {
+      const promise = newsapi.v2.everything({
+        q: term,
+        sortBy: sortBy,
+        language: "en",
+      })
+      .then(response => {
+        if (response.articles && response.articles.length > 0) {
+          // Filter by source if needed
+          let articles = response.articles;
+          if (filterBy === 'source') {
+            articles = articles.filter(article => 
+              article.source.name.toLowerCase().includes(term.toLowerCase())
+            );
+          }
+          
+          // Add term as a property for tracking/debugging
+          articles = articles.map(article => ({
+            ...article,
+            queryTerm: term
+          }));
+          
+          allArticles.push(...articles);
+        }
+      })
+      .catch(err => {
+        console.error(`Error fetching news for term "${term}":`, err);
+      });
+      
+      promises.push(promise);
     });
+    
+    // Wait for all API calls to complete
+    await Promise.all(promises);
+    
+    // Check if we got any articles
+    if (allArticles.length === 0) {
+      console.log('No articles found for any of the predicted terms, falling back to general news');
+      
+      // Fallback to a general news query
+      try {
+        const fallbackResponse = await newsapi.v2.everything({
+          q: 'news',
+          sortBy: sortBy,
+          language: "en",
+        });
+        
+        if (fallbackResponse.articles && fallbackResponse.articles.length > 0) {
+          allArticles.push(...fallbackResponse.articles.map(article => ({
+            ...article,
+            queryTerm: 'news_fallback'
+          })));
+        }
+      } catch (err) {
+        console.error('Error fetching fallback news:', err);
+      }
+    }
+    
+    // Shuffle articles to mix results from different terms
+    const shuffledArticles = shuffleArray(allArticles);
+    
+    console.log(`Sending ${shuffledArticles.length} articles to user`);
+    res.json(shuffledArticles);
+  } catch (err) {
+    console.error('Error in /api/news endpoint:', err);
+    res.status(500).send('Error fetching personalized news');
+  }
 });
 
+// Function to fetch and send news for a single query
+function fetchAndSendNews(query, filterBy, sortBy, res) {
+  newsapi.v2.everything({
+    q: query,
+    sortBy: sortBy,
+    language: "en",
+  })
+  .then(response => {
+    let filteredArticles = response.articles;
+    if (filterBy === 'source') {
+      filteredArticles = filteredArticles.filter(article =>
+        article.source.name.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+    res.json(filteredArticles);
+  })
+  .catch(err => {
+    console.error(`Error fetching news for "${query}":`, err);
+    res.status(500).send('Error fetching news');
+  });
+}
+
+// Function to shuffle array of articles
+function shuffleArray(array) {
+  const newArray = [...array]; // Create a copy to avoid mutating the original
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]]; // Swap elements
+  }
+  return array;
+}
 app.get('/api/trending', isAuthenticated, (req, res) => {
   const { q, country, category, sortBy } = req.query;
 
