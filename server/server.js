@@ -1904,7 +1904,7 @@ app.get('/api/news', isAuthenticated, async (req, res) => {
   try {
     // Get user's predicted terms from database
     const userPredictions = await UserPredictionTerms.findOne({ userId });
-    let queryTerms = ['news']; // Default fallback
+    let queryTerms = ['news','technology', 'politics', 'entertainment']; // Default fallback
     
     // Use predicted terms if available
     if (userPredictions && userPredictions.predictedTerms && userPredictions.predictedTerms.length > 0) {
