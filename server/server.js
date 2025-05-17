@@ -1002,10 +1002,12 @@ mongoose.connect('mongodb+srv://aaranyalmaskey:%40aaranya01@newshive.3ub8wnl.mon
   .then(() => console.log('MongoDB Connected to Atlas'))
   .catch(err => console.error('Error connecting to MongoDB Atlas:', err));
   
+
+  const { queueRecommendationUpdate } = require('./recommendation-service');
 // Like an article
 app.post('/api/like', isAuthenticated, async (req, res) => {
   try {
-    const { articleId, article } = req.body;  // Add article to the request
+    const { articleId, article } = req.body;
     const userId = req.session.user.id;
     
     // Find the existing interaction
@@ -1031,12 +1033,55 @@ app.post('/api/like', isAuthenticated, async (req, res) => {
     
     await interaction.save();
     
+    // Queue recommendation update after interaction
+    queueRecommendationUpdate(userId).catch(err => {
+      console.error('Failed to update recommendations:', err);
+    });
+    
     res.json(interaction);
   } catch (error) {
     console.error('Error toggling like status:', error);
     res.status(500).json({ error: 'Failed to update like status' });
   }
 });
+
+// Add similar integration to other interaction routes
+app.post('/api/save', isAuthenticated, async (req, res) => {
+  try {
+    const { articleId, article } = req.body;
+    const userId = req.session.user.id;
+    
+    // Find or create interaction
+    let interaction = await Interaction.findOne({ articleId, userId });
+    
+    if (!interaction) {
+      interaction = new Interaction({
+        userId: userId,
+        articleId: articleId,
+        saved: true,
+        articleData: article
+      });
+    } else {
+      interaction.saved = !interaction.saved;
+      if (article) {
+        interaction.articleData = article;
+      }
+    }
+    
+    await interaction.save();
+    
+    // Queue recommendation update
+    queueRecommendationUpdate(userId).catch(err => {
+      console.error('Failed to update recommendations:', err);
+    });
+    
+    res.json(interaction);
+  } catch (error) {
+    console.error('Error toggling save status:', error);
+    res.status(500).json({ error: 'Failed to update save status' });
+  }
+});
+
 
 app.post('/api/user-interactions', isAuthenticated, async (req, res) => {
   try {
@@ -1908,7 +1953,7 @@ app.get('/api/news', isAuthenticated, async (req, res) => {
     
     // Use predicted terms if available
     if (userPredictions && userPredictions.predictedTerms && userPredictions.predictedTerms.length > 0) {
-      queryTerms = userPredictions.predictedTerms;
+      queryTerms = userPredictions.predictedTerms.slice(0, 1);
     }
     
     // Log the search terms for the user

@@ -12,6 +12,6 @@
     "concurrently": "^9.1.2"
   },
   "scripts": {
-  "start-all": "concurrently \"cd server && npm run dev\" \"cd test && npm start\" \"cd server && python scraper.py\""
+  "start-all": "concurrently \"cd server && npm run dev\" \"cd test && npm start\" \"cd server && python scraper.py\" \"cd server && python news_recommendation_system.py\""
 }
 }
