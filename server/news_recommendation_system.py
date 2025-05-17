@@ -18,11 +18,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-
-# Ensure NLTK resources are downloaded
-# Uncomment these lines to download required NLTK data for first-time setup
-import nltk
-nltk.download('punkt_tab')
+#import nltk
+#nltk.download('punkt_tab')
 #nltk.download('punkt')        
 # nltk.download('stopwords')
 # nltk.download('wordnet')
