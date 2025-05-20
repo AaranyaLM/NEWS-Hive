@@ -1088,7 +1088,7 @@ app.post('/api/user-interactions', isAuthenticated, async (req, res) => {
     const { articleIds } = req.body;
     const userId = req.session.user.id;
     
-    console.log('Fetching interactions for user:', userId, 'articles:', articleIds);
+    //console.log('Fetching interactions for user:', userId, 'articles:', articleIds);
     
     // Find all interactions for this user and the provided article IDs
     const interactions = await Interaction.find({
