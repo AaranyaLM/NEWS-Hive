@@ -18,6 +18,7 @@ import AdminActivities from './Pages/Admin/AdminActivities';
 import Downloads from './Pages/Downloads';
 import Contact from './Pages/Contact';
 import AdminContacts from './Pages/Admin/AdminContacts';
+import AboutPage from './Pages/AboutPage';
 function App() {
   return (
     <Router>
@@ -34,6 +35,11 @@ function App() {
         <Route path="/" element={
           <ProtectedRoute>
             <Homepage />
+          </ProtectedRoute>
+        } />
+          <Route path="/about" element={
+          <ProtectedRoute>
+            <AboutPage />
           </ProtectedRoute>
         } />
         <Route path="/trending" element={
