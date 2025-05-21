@@ -8,7 +8,7 @@ const os = require('os');
 let updateQueue = [];
 let isProcessing = false;
 let lastUpdateTime = 0;
-const UPDATE_COOLDOWN = 120000;
+const UPDATE_COOLDOWN = 60000;
 
 // Function to find the correct Python command
 function getPythonCommand() {

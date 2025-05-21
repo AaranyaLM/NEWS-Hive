@@ -51,7 +51,7 @@ def connect_to_mongodb():
         db = client["news_hive"]
         return db
     except Exception as e:
-        print(f"❌ Error connecting to MongoDB: {e}")
+        print(f" Error connecting to MongoDB: {e}")
         return None
 
 def extract_interaction_data(db):
@@ -310,7 +310,7 @@ def build_personalized_models(user_interactions, user_term_profiles, user_vector
 
         # Apply DBSCAN clustering with slightly randomized parameters
         # Vary eps slightly to get different clustering results
-        eps_value = 0.5 + random.uniform(-0.1, 0.1)
+        eps_value = 3 + random.uniform(-0.1, 0.1)
         dbscan = DBSCAN(eps=eps_value, min_samples=2)
         clusters = dbscan.fit_predict(X_scaled)
 
