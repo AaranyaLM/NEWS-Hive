@@ -19,6 +19,7 @@ import Downloads from './Pages/Downloads';
 import Contact from './Pages/Contact';
 import AdminContacts from './Pages/Admin/AdminContacts';
 import AboutPage from './Pages/AboutPage';
+import Terms from './Pages/Terms';
 function App() {
   return (
     <Router>
@@ -31,6 +32,7 @@ function App() {
       <Route path="/admin/comments" element={<AdminComments />} />
       <Route path="/admin/contacts" element={<AdminContacts />} />
         <Route path="/userauth" element={<UserAuth />} />
+      <Route path="terms" element={<Terms />} />
         <Route path="/forgot" element={<ForgotPassword />} /> 
         <Route path="/" element={
           <ProtectedRoute>

@@ -375,7 +375,6 @@
         max-width: 300px;
     }
 }
-
 /* Animation for transitions */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -384,6 +383,19 @@
 
 .verify-container {
     animation: fadeIn 0.5s ease forwards;
+}
+.terms {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.terms-link {
+  color: #000000;
+  text-decoration: none;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
 }
 
 /* Enhance form styles */

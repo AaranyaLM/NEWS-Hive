@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './UserAuth.css';
 import logo from '../Images/WhiteLogo.png';
 import Toast from '../Components/Toast'; // Import the Toast component
@@ -315,7 +315,12 @@ function UserAuth() {
                                     required
                                 />
                             </div>
-                            
+                             <div className="terms">
+                            By registering to this platform, you are agreeing to our{' '}
+                            <Link to="/terms" className="terms-link" target='_blank'>
+                                Terms and Conditions
+                            </Link>.
+                        </div>
                             <div className='input-group mb-3 justify-content-center'>
                                 <button 
                                     type="submit" 
@@ -414,7 +419,9 @@ function UserAuth() {
                             <div className='forgot'>
                                 <small><a href='/forgot'>Forgot Password?</a></small>
                             </div>
+                           
                         </div>
+                       
                         <div className='input-group mb-3 justify-content-center'>
                             <button 
                                 type="submit" 
