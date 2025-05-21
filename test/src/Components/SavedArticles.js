@@ -9,6 +9,8 @@ function SavedArticles() {
     const [openMenuId, setOpenMenuId] = useState(null);
     const [shared, setShared] = useState(null);
     const [user, setUser] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loadingDownload, setLoadingDownload] = useState(null);
     const navigate = useNavigate();
     
     // Toast notification state
@@ -68,6 +70,7 @@ function SavedArticles() {
             
             if (data.success) {
                 setUser(data.user);
+                setCurrentUser(data.user); // Set currentUser state as well
                 return true;
             } else {
                 // Redirect to login if not authenticated
@@ -176,11 +179,54 @@ function SavedArticles() {
         }
     };
 
-    const handleDownload = (e, article) => {
-        e.stopPropagation();
-        console.log('Download article:', article.title);
-        setOpenMenuId(null);
-    };
+   const handleDownload = async (e, article) => {
+    e.stopPropagation();
+    if (!currentUser) return;
+    
+    try {
+      setLoadingDownload(article.url); // Track which article is downloading
+      
+      const articleId = generateArticleId(article);
+      
+      const response = await fetch('http://localhost:5000/api/download-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          articleId,
+          article,
+          userId: currentUser.id
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+      
+      // Create a blob from the PDF stream
+      const blob = await response.blob();
+      
+      // Create a link element and trigger download
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `${article.title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+      showToast('Article downloaded successfully');
+      
+    } catch (error) {
+      console.error('Error downloading article:', error);
+      showToast('Failed to download the article');
+    } finally {
+      setLoadingDownload(null);
+      setOpenMenuId(null); // Close the menu
+    }
+  };
 
     // Handle clicking on a news article - navigate to Content page
     const handleReadMore = async (article, e) => {
@@ -298,7 +344,11 @@ function SavedArticles() {
                                                 className="menu-item" 
                                                 onClick={(e) => handleDownload(e, article)}
                                             >
-                                                <FaDownload /> Download
+                                                {loadingDownload === article.url ? (
+                                                    <>Downloading...</>
+                                                ) : (
+                                                    <><FaDownload /> Download</>
+                                                )}
                                             </div>
                                         </div>
                                     )}

@@ -77,7 +77,7 @@ app.use(session({
 
 // Authentication middleware
 const isAuthenticated = (req, res, next) => {
-  console.log('Session User:', req.session.user);
+  //console.log('Session User:', req.session.user);
   if (req.session.user) {
     next();
   } else {
@@ -1932,6 +1932,8 @@ app.post('/api/user/remove-download', isAuthenticated, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error removing article from downloads', error: error.message });
   }
 });
+
+
 // For the feeds
 // Protected API routes
 app.get('/api/news', isAuthenticated, async (req, res) => {
@@ -2520,8 +2522,8 @@ app.post('/api/contact/submit', isAuthenticated, async (req, res) => {
     // Get the authenticated user's ID from the session
     const authenticatedUserId = req.session.user.id;
     
-    // Debug logging to identify the issue
-    console.log('Session user:', req.session.user);
+
+    //console.log('Session user:', req.session.user);
     console.log('Request userId:', userId);
     
     // Validate that the authenticated user matches the userId in the request
